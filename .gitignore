@@ -20,6 +20,9 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Vercel build output
+.vercel
+
 # Real prospection data (business-sensitive) — already seeded into Supabase,
 # not needed in the repo. Keep locally.
 entreprises_amal_biladi_seed.json

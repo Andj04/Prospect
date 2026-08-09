@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Force the Vercel (Node serverless) preset explicitly — don't rely on
+  // Nitro's platform auto-detection, which otherwise falls back to the
+  // Cloudflare preset baked in by @lovable.dev/vite-tanstack-config.
+  nitro: {
+    preset: "vercel",
+  },
 });
