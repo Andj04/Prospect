@@ -33,7 +33,12 @@ type AuthCtx = {
   loading: boolean;
   session: Session | null;
   profile: Profile | null;
+  /** Effective role for the UI — false while an admin previews the user view. */
   isAdmin: boolean;
+  /** True for real admins only — controls whether the view-switch is shown. */
+  canPreviewUserView: boolean;
+  viewingAsUser: boolean;
+  setViewingAsUser: (v: boolean) => void;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -45,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewingAsUser, setViewingAsUser] = useState(false);
 
   const loadProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -80,11 +86,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Reset the "view as user" preview whenever the signed-in account changes.
+  useEffect(() => {
+    setViewingAsUser(false);
+  }, [profile?.id]);
+
+  const canPreviewUserView = profile?.role === "admin";
+
   const value: AuthCtx = {
     loading,
     session,
     profile,
-    isAdmin: profile?.role === "admin",
+    isAdmin: canPreviewUserView && !viewingAsUser,
+    canPreviewUserView,
+    viewingAsUser,
+    setViewingAsUser,
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error: error?.message ?? null };

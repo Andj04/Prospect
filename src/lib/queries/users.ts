@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase-client";
-import { createUserAdmin, deleteUserAdmin } from "@/server-functions/users";
+import { createUserAdmin, deleteUserAdmin, updateUserRoleAdmin } from "@/server-functions/users";
 import type { AppUser, Role } from "@/lib/types";
 import { USERS_KEY } from "./keys";
 
@@ -68,6 +68,17 @@ export function useDeleteUser() {
     mutationFn: async (userId: string) => {
       const accessToken = await requireAccessToken();
       return deleteUserAdmin({ data: { accessToken, userId } });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: USERS_KEY }),
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: Role }) => {
+      const accessToken = await requireAccessToken();
+      return updateUserRoleAdmin({ data: { accessToken, userId, role } });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: USERS_KEY }),
   });

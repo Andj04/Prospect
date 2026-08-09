@@ -86,3 +86,31 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+const updateUserRoleSchema = z.object({
+  accessToken: z.string().min(1),
+  userId: z.string().uuid(),
+  role: z.enum(["admin", "user"]),
+});
+
+export const updateUserRoleAdmin = createServerFn({ method: "POST" })
+  .validator((data: unknown) => updateUserRoleSchema.parse(data))
+  .handler(async ({ data }) => {
+    const adminClient = createAdminClient();
+    const caller = await assertCallerIsAdmin(adminClient, data.accessToken);
+
+    if (caller.id === data.userId) {
+      throw new Error("Vous ne pouvez pas modifier votre propre rôle.");
+    }
+
+    // profiles' RLS trigger blocks role changes for any non-service_role
+    // caller, so this must go through the admin client, not a direct
+    // client-side update.
+    const { error } = await adminClient
+      .from("profiles")
+      .update({ role: data.role })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    return { ok: true };
+  });

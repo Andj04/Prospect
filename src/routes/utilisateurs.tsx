@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useCreateUser, useDeleteUser, useUsers } from "@/lib/queries/users";
+import { useCreateUser, useDeleteUser, useUpdateUserRole, useUsers } from "@/lib/queries/users";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/utilisateurs")({
@@ -48,6 +48,7 @@ function UtilisateursPage() {
   const { data: users = [] } = useUsers();
   const createUser = useCreateUser();
   const deleteUser = useDeleteUser();
+  const updateUserRole = useUpdateUserRole();
   const [form, setForm] = useState(empty);
 
   if (!isAdmin) {
@@ -89,9 +90,35 @@ function UtilisateursPage() {
                     <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{u.structure}</td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
-                        {u.role === "admin" ? "Administrateur" : "Utilisateur"}
-                      </span>
+                      {u.id === profile?.id ? (
+                        <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+                          {u.role === "admin" ? "Administrateur" : "Utilisateur"}
+                        </span>
+                      ) : (
+                        <Select
+                          value={u.role}
+                          onValueChange={(v) => {
+                            updateUserRole.mutate(
+                              { userId: u.id, role: v as Role },
+                              {
+                                onSuccess: () => toast.success("Rôle mis à jour"),
+                                onError: (err) =>
+                                  toast.error(
+                                    err instanceof Error ? err.message : "Échec de la mise à jour",
+                                  ),
+                              },
+                            );
+                          }}
+                        >
+                          <SelectTrigger className="h-8 w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Administrateur</SelectItem>
+                            <SelectItem value="user">Utilisateur</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button

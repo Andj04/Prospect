@@ -11,7 +11,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import logoMark from "@/assets/logo-mark.png";
+
+function ViewSwitch() {
+  const { canPreviewUserView, viewingAsUser, setViewingAsUser } = useAuth();
+  if (!canPreviewUserView) return null;
+
+  return (
+    <div className="flex shrink-0 items-center rounded-full border border-border bg-muted p-0.5">
+      {([false, true] as const).map((asUser) => (
+        <button
+          key={String(asUser)}
+          onClick={() => setViewingAsUser(asUser)}
+          className={cn(
+            "rounded-full px-3 py-1.5 text-xs font-semibold transition-all",
+            viewingAsUser === asUser
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {asUser ? "Vue Utilisateur" : "Vue Admin"}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
   return (
@@ -27,7 +52,7 @@ function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: stri
 }
 
 function UserMenu() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, isAdmin, viewingAsUser } = useAuth();
   const navigate = useNavigate();
   if (!profile) return null;
 
@@ -47,6 +72,7 @@ function UserMenu() {
           <span className="block truncate text-xs font-normal text-muted-foreground">
             {profile.structure || "—"} ·{" "}
             {profile.role === "admin" ? "Administrateur" : "Utilisateur"}
+            {viewingAsUser && " (aperçu utilisateur)"}
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -54,7 +80,7 @@ function UserMenu() {
           <User className="h-4 w-4" />
           Mon compte
         </DropdownMenuItem>
-        {profile.role === "admin" && (
+        {isAdmin && (
           <DropdownMenuItem onSelect={() => navigate({ to: "/utilisateurs" })}>
             <Users className="h-4 w-4" />
             Gérer les utilisateurs
@@ -146,6 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </Button>
             )}
+            <ViewSwitch />
             <UserMenu />
           </div>
         </div>
