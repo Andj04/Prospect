@@ -17,7 +17,7 @@ import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
 import { Route as EntreprisesIdRouteImport } from './routes/entreprises.$id'
 import { Route as EntreprisesNouvelleRouteImport } from './routes/entreprises.nouvelle'
-import { Route as EntreprisesIdModifierRouteImport } from './routes/entreprises.$id.modifier'
+import { Route as EntreprisesIdModifierRouteImport } from './routes/entreprises.$id_.modifier'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,9 +60,9 @@ const EntreprisesNouvelleRoute = EntreprisesNouvelleRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntreprisesIdModifierRoute = EntreprisesIdModifierRouteImport.update({
-  id: '/modifier',
-  path: '/modifier',
-  getParentRoute: () => EntreprisesIdRoute,
+  id: '/entreprises/$id_/modifier',
+  path: '/entreprises/$id/modifier',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -72,7 +72,7 @@ export interface FileRoutesByFullPath {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
-  '/entreprises/$id': typeof EntreprisesIdRouteWithChildren
+  '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
 }
@@ -83,7 +83,7 @@ export interface FileRoutesByTo {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
-  '/entreprises/$id': typeof EntreprisesIdRouteWithChildren
+  '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
 }
@@ -95,9 +95,9 @@ export interface FileRoutesById {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
-  '/entreprises/$id': typeof EntreprisesIdRouteWithChildren
+  '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
-  '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
+  '/entreprises/$id_/modifier': typeof EntreprisesIdModifierRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,7 +132,7 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
-    | '/entreprises/$id/modifier'
+    | '/entreprises/$id_/modifier'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -142,8 +142,9 @@ export interface RootRouteChildren {
   MonCompteRoute: typeof MonCompteRoute
   PipelineRoute: typeof PipelineRoute
   UtilisateursRoute: typeof UtilisateursRoute
-  EntreprisesIdRoute: typeof EntreprisesIdRouteWithChildren
+  EntreprisesIdRoute: typeof EntreprisesIdRoute
   EntreprisesNouvelleRoute: typeof EntreprisesNouvelleRoute
+  EntreprisesIdModifierRoute: typeof EntreprisesIdModifierRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -204,27 +205,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntreprisesNouvelleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/entreprises/$id/modifier': {
-      id: '/entreprises/$id/modifier'
-      path: '/modifier'
+    '/entreprises/$id_/modifier': {
+      id: '/entreprises/$id_/modifier'
+      path: '/entreprises/$id/modifier'
       fullPath: '/entreprises/$id/modifier'
       preLoaderRoute: typeof EntreprisesIdModifierRouteImport
-      parentRoute: typeof EntreprisesIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface EntreprisesIdRouteChildren {
-  EntreprisesIdModifierRoute: typeof EntreprisesIdModifierRoute
-}
-
-const EntreprisesIdRouteChildren: EntreprisesIdRouteChildren = {
-  EntreprisesIdModifierRoute: EntreprisesIdModifierRoute,
-}
-
-const EntreprisesIdRouteWithChildren = EntreprisesIdRoute._addFileChildren(
-  EntreprisesIdRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -233,8 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   MonCompteRoute: MonCompteRoute,
   PipelineRoute: PipelineRoute,
   UtilisateursRoute: UtilisateursRoute,
-  EntreprisesIdRoute: EntreprisesIdRouteWithChildren,
+  EntreprisesIdRoute: EntreprisesIdRoute,
   EntreprisesNouvelleRoute: EntreprisesNouvelleRoute,
+  EntreprisesIdModifierRoute: EntreprisesIdModifierRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

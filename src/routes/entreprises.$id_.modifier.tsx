@@ -8,7 +8,7 @@ import { useCompany, useSaveCompany } from "@/lib/queries/companies";
 import { useProjects } from "@/lib/queries/projects";
 import type { Company } from "@/lib/types";
 
-export const Route = createFileRoute("/entreprises/$id/modifier")({
+export const Route = createFileRoute("/entreprises/$id_/modifier")({
   head: () => ({
     meta: [
       { title: "Modifier une entreprise — Prospection RSE Amal Biladi" },
