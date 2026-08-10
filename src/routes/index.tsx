@@ -15,6 +15,9 @@ import { AppShell } from "@/components/AppShell";
 import { ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -258,6 +261,124 @@ function LongCell({ text, title }: { text: string | undefined; title: string }) 
   );
 }
 
+function EditableLongCell({
+  value,
+  title,
+  onSave,
+}: {
+  value: string | undefined;
+  title: string;
+  onSave: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setDraft(value ?? "");
+          setOpen(true);
+        }}
+        className="block max-w-[220px] truncate text-left text-foreground/80 underline-offset-2 hover:text-primary hover:underline"
+        title={value}
+      >
+        {value || <span className="text-muted-foreground/60">—</span>}
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <Textarea rows={6} autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onSave(draft);
+                setOpen(false);
+              }}
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function ExclusionCell({
+  exclue,
+  raison,
+  onSave,
+}: {
+  exclue: boolean;
+  raison: string | undefined;
+  onSave: (exclue: boolean, raison: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draftExclue, setDraftExclue] = useState(exclue);
+  const [draftRaison, setDraftRaison] = useState(raison ?? "");
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setDraftExclue(exclue);
+          setDraftRaison(raison ?? "");
+          setOpen(true);
+        }}
+        className="block max-w-[200px] truncate text-left text-xs hover:underline"
+      >
+        {exclue ? (
+          <span className="font-medium text-destructive">Exclue — {raison || "—"}</span>
+        ) : (
+          <span className="text-muted-foreground/60">—</span>
+        )}
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Statut d'exclusion</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+            <Label htmlFor="excl-toggle" className="text-sm font-normal">
+              Entreprise exclue de la prospection
+            </Label>
+            <Switch id="excl-toggle" checked={draftExclue} onCheckedChange={setDraftExclue} />
+          </div>
+          {draftExclue && (
+            <Textarea
+              rows={3}
+              placeholder="Raison de l'exclusion"
+              value={draftRaison}
+              onChange={(e) => setDraftRaison(e.target.value)}
+            />
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onSave(draftExclue, draftRaison);
+                setOpen(false);
+              }}
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function EditableCell({
   value,
   onCommit,
@@ -319,9 +440,9 @@ function AdminTable() {
     [list, sort],
   );
 
-  const patch = (id: string, field: PatchableField, value: string | boolean) => {
+  const patch = (id: string, fields: Partial<Record<PatchableField, string | boolean>>) => {
     patchEntreprise.mutate(
-      { id, field, value },
+      { id, patch: fields },
       {
         onError: (err) =>
           toast.error(err instanceof Error ? err.message : "Échec de l'enregistrement"),
@@ -398,53 +519,84 @@ function AdminTable() {
                   <td className="px-3 py-2 font-medium">
                     <EditableCell
                       value={c.nom}
-                      onCommit={(v) => patch(c.id, "nom", v)}
+                      onCommit={(v) => patch(c.id, { nom: v })}
                       className="font-semibold"
                     />
                   </td>
                   <td className="px-3 py-2">
                     <EditableCell
                       value={c.groupe ?? ""}
-                      onCommit={(v) => patch(c.id, "groupe", v)}
+                      onCommit={(v) => patch(c.id, { groupe: v })}
                     />
                   </td>
                   <td className="px-3 py-2">
                     <EditableCell
                       value={c.secteur ?? ""}
-                      onCommit={(v) => patch(c.id, "secteur", v)}
+                      onCommit={(v) => patch(c.id, { secteur: v })}
                     />
                   </td>
                   <td className="px-3 py-2">
                     <button
-                      onClick={() => patch(c.id, "structureDediee", !c.structureDediee)}
+                      onClick={() => patch(c.id, { structureDediee: !c.structureDediee })}
                       className="rounded-md bg-muted px-2 py-1 text-xs font-medium hover:bg-accent"
                     >
                       {c.structureDediee == null ? "—" : c.structureDediee ? "Oui" : "Non"}
                     </button>
                   </td>
                   <td className="px-3 py-2">
-                    <LongCell text={c.modeAcces} title="Mode d'accès au financement" />
+                    <EditableLongCell
+                      value={c.modeAcces}
+                      title="Mode d'accès au financement"
+                      onSave={(v) => patch(c.id, { modeAcces: v })}
+                    />
                   </td>
                   <td className="px-3 py-2">
                     <EditableCell
                       value={c.budgetRSE ?? ""}
-                      onCommit={(v) => patch(c.id, "budgetRSE", v)}
+                      onCommit={(v) => patch(c.id, { budgetRSE: v })}
                     />
                   </td>
-                  <td className="px-3 py-2 text-xs capitalize text-muted-foreground">
-                    {c.typeEngagement || "—"}
+                  <td className="px-3 py-2">
+                    <Select
+                      {...(c.typeEngagement ? { value: c.typeEngagement } : {})}
+                      onValueChange={(v) => patch(c.id, { typeEngagement: v })}
+                    >
+                      <SelectTrigger className="h-8 w-[130px] text-xs">
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recurrent">Récurrent</SelectItem>
+                        <SelectItem value="ponctuel">Ponctuel</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="px-3 py-2">
-                    <LongCell text={c.descriptifActivites} title="Descriptif des activités" />
+                    <EditableLongCell
+                      value={c.descriptifActivites}
+                      title="Descriptif des activités"
+                      onSave={(v) => patch(c.id, { descriptifActivites: v })}
+                    />
                   </td>
                   <td className="px-3 py-2">
-                    <LongCell text={c.programmes} title="Programmes" />
+                    <EditableLongCell
+                      value={c.programmes}
+                      title="Programmes"
+                      onSave={(v) => patch(c.id, { programmes: v })}
+                    />
                   </td>
                   <td className="px-3 py-2">
-                    <LongCell text={c.projetsFinances} title="Projets déjà financés" />
+                    <EditableLongCell
+                      value={c.projetsFinances}
+                      title="Projets déjà financés"
+                      onSave={(v) => patch(c.id, { projetsFinances: v })}
+                    />
                   </td>
                   <td className="px-3 py-2">
-                    <LongCell text={c.alignementThematique} title="Alignement thématique" />
+                    <EditableLongCell
+                      value={c.alignementThematique}
+                      title="Alignement thématique"
+                      onSave={(v) => patch(c.id, { alignementThematique: v })}
+                    />
                   </td>
                   <td className="px-3 py-2 text-xs text-muted-foreground">
                     {c.contacts.length ? `${c.contacts.length} contact(s)` : "—"}
@@ -459,14 +611,12 @@ function AdminTable() {
                     </div>
                   </td>
                   <td className="px-3 py-2">{pl && <StatutBadge statut={pl.statut} />}</td>
-                  <td className="px-3 py-2 text-xs">
-                    {c.exclue ? (
-                      <span className="font-medium text-destructive">
-                        Exclue — {c.raisonExclusion}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground/60">—</span>
-                    )}
+                  <td className="px-3 py-2">
+                    <ExclusionCell
+                      exclue={c.exclue}
+                      raison={c.raisonExclusion}
+                      onSave={(exclue, raisonExclusion) => patch(c.id, { exclue, raisonExclusion })}
+                    />
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-1">

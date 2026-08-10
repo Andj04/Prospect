@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Building2, GitBranch, LogOut, User, Users } from "lucide-react";
+import { Building2, GitBranch, History, LogOut, User, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
@@ -86,6 +86,12 @@ function UserMenu() {
             Gérer les utilisateurs
           </DropdownMenuItem>
         )}
+        {isAdmin && (
+          <DropdownMenuItem onSelect={() => navigate({ to: "/journal" })}>
+            <History className="h-4 w-4" />
+            Journal d'activité
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
@@ -161,6 +167,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   label="Utilisateurs"
                 />
               )}
+              {isAdmin && (
+                <NavItem to="/journal" icon={<History className="h-4 w-4" />} label="Journal" />
+              )}
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -181,6 +190,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem to="/pipeline" icon={<GitBranch className="h-4 w-4" />} label="Pipeline" />
           {isAdmin && (
             <NavItem to="/utilisateurs" icon={<Users className="h-4 w-4" />} label="Utilisateurs" />
+          )}
+          {isAdmin && (
+            <NavItem to="/journal" icon={<History className="h-4 w-4" />} label="Journal" />
           )}
         </nav>
         <PasswordChangeBanner />

@@ -1,4 +1,7 @@
 import type {
+  AuditAction,
+  AuditLogEntry,
+  AuditTable,
   Company,
   Contact,
   ContactFonction,
@@ -114,4 +117,30 @@ export type ProjetRow = { id: string; nom: string; ordre: number };
 
 export function mapProjet(row: ProjetRow): Projet {
   return { id: row.id, nom: row.nom, ordre: row.ordre };
+}
+
+export type AuditLogRow = {
+  id: string;
+  actor_id: string | null;
+  actor_name: string;
+  table_name: AuditTable;
+  action: AuditAction;
+  record_id: string;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export function mapAuditLogEntry(row: AuditLogRow): AuditLogEntry {
+  return {
+    id: row.id,
+    actorId: row.actor_id,
+    actorName: row.actor_name,
+    tableName: row.table_name,
+    action: row.action,
+    recordId: row.record_id,
+    oldData: row.old_data,
+    newData: row.new_data,
+    createdAt: row.created_at,
+  };
 }

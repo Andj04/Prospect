@@ -105,3 +105,18 @@ export type AppUser = {
   role: Role;
   passwordChangeRequired: boolean;
 };
+
+export type AuditAction = "INSERT" | "UPDATE" | "DELETE";
+export type AuditTable = "entreprises" | "pipeline" | "pipeline_historique" | "projets";
+
+export type AuditLogEntry = {
+  id: string;
+  actorId: string | null;
+  actorName: string;
+  tableName: AuditTable;
+  action: AuditAction;
+  recordId: string;
+  oldData: Record<string, unknown> | null;
+  newData: Record<string, unknown> | null;
+  createdAt: string;
+};

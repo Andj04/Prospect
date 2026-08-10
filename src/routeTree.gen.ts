@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalRoute = JournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MonCompteRoute = MonCompteRouteImport.update({
@@ -62,6 +68,7 @@ const EntreprisesIdModifierRoute = EntreprisesIdModifierRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connexion': typeof ConnexionRoute
+  '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connexion': typeof ConnexionRoute
+  '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/connexion': typeof ConnexionRoute
+  '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/connexion'
+    | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/utilisateurs'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/connexion'
+    | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/utilisateurs'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/connexion'
+    | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/utilisateurs'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnexionRoute: typeof ConnexionRoute
+  JournalRoute: typeof JournalRoute
   MonCompteRoute: typeof MonCompteRoute
   PipelineRoute: typeof PipelineRoute
   UtilisateursRoute: typeof UtilisateursRoute
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/connexion'
       fullPath: '/connexion'
       preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal': {
+      id: '/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof JournalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mon-compte': {
@@ -209,6 +229,7 @@ const EntreprisesIdRouteWithChildren = EntreprisesIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnexionRoute: ConnexionRoute,
+  JournalRoute: JournalRoute,
   MonCompteRoute: MonCompteRoute,
   PipelineRoute: PipelineRoute,
   UtilisateursRoute: UtilisateursRoute,

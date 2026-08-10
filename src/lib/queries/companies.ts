@@ -87,6 +87,17 @@ const FIELD_TO_COLUMN = {
   secteur: "secteur",
   budgetRSE: "comment_budget",
   structureDediee: "structure_dediee",
+  modeAcces: "comment_mode_acces",
+  typeEngagement: "comment_type_engagement",
+  descriptifActivites: "quoi_descriptif",
+  programmes: "quoi_programmes",
+  projetsFinances: "quoi_projets_finances",
+  notesComplementaires: "quoi_notes_complementaires",
+  alignementThematique: "pourquoi_alignement",
+  precedentFort: "pourquoi_precedent_fort",
+  propositionConcrete: "pourquoi_proposition",
+  raisonExclusion: "raison_exclusion",
+  exclue: "exclue",
 } as const;
 
 export type PatchableField = keyof typeof FIELD_TO_COLUMN;
@@ -96,18 +107,16 @@ export function usePatchEntreprise() {
   return useMutation({
     mutationFn: async ({
       id,
-      field,
-      value,
+      patch,
     }: {
       id: string;
-      field: PatchableField;
-      value: string | boolean;
+      patch: Partial<Record<PatchableField, string | boolean>>;
     }) => {
-      const column = FIELD_TO_COLUMN[field];
-      const { error } = await supabase
-        .from("entreprises")
-        .update({ [column]: value })
-        .eq("id", id);
+      const payload: Record<string, string | boolean> = {};
+      for (const [field, value] of Object.entries(patch)) {
+        payload[FIELD_TO_COLUMN[field as PatchableField]] = value as string | boolean;
+      }
+      const { error } = await supabase.from("entreprises").update(payload).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
