@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase-client";
 import { mapAuditLogEntry, type AuditLogRow } from "@/lib/mappers";
 import type { AuditLogEntry } from "@/lib/types";
-
-const AUDIT_LOG_KEY = ["audit-log"] as const;
+import { AUDIT_LOG_KEY } from "./keys";
 
 export function useAuditLog() {
   return useQuery({

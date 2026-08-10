@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Building2, GitBranch, History, LogOut, User, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useRealtimeSync } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -124,6 +125,7 @@ function PasswordChangeBanner() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { loading, session, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
+  useRealtimeSync(Boolean(session));
 
   useEffect(() => {
     if (!loading && !session) {
