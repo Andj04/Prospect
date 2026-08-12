@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CartographieRouteImport } from './routes/cartographie'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
@@ -22,6 +23,11 @@ import { Route as EntreprisesIdModifierRouteImport } from './routes/entreprises.
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartographieRoute = CartographieRouteImport.update({
+  id: '/cartographie',
+  path: '/cartographie',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnexionRoute = ConnexionRouteImport.update({
@@ -67,6 +73,7 @@ const EntreprisesIdModifierRoute = EntreprisesIdModifierRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cartographie'
     | '/connexion'
     | '/journal'
     | '/mon-compte'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cartographie'
     | '/connexion'
     | '/journal'
     | '/mon-compte'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/cartographie'
     | '/connexion'
     | '/journal'
     | '/mon-compte'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CartographieRoute: typeof CartographieRoute
   ConnexionRoute: typeof ConnexionRoute
   JournalRoute: typeof JournalRoute
   MonCompteRoute: typeof MonCompteRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cartographie': {
+      id: '/cartographie'
+      path: '/cartographie'
+      fullPath: '/cartographie'
+      preLoaderRoute: typeof CartographieRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connexion': {
@@ -217,6 +237,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CartographieRoute: CartographieRoute,
   ConnexionRoute: ConnexionRoute,
   JournalRoute: JournalRoute,
   MonCompteRoute: MonCompteRoute,

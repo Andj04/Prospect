@@ -261,6 +261,63 @@ function LongCell({ text, title }: { text: string | undefined; title: string }) 
   );
 }
 
+function LogoCell({ value, onSave }: { value: string | undefined; onSave: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setDraft(value ?? "");
+          setImgError(false);
+          setOpen(true);
+        }}
+        className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-border bg-muted hover:border-primary/40"
+      >
+        {value && !imgError ? (
+          <img
+            src={value}
+            alt=""
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="text-[9px] text-muted-foreground">—</span>
+        )}
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>URL du logo</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="https://…/logo.png"
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onSave(draft);
+                setOpen(false);
+              }}
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function EditableLongCell({
   value,
   title,
@@ -493,6 +550,7 @@ function AdminTable() {
               {th("nom", "Entreprise")}
               {th("groupe", "Groupe")}
               {th("secteur", "Secteur")}
+              <th className="px-3 py-2.5 text-left font-semibold">Logo</th>
               <th className="px-3 py-2.5 text-left font-semibold">Fondation</th>
               <th className="px-3 py-2.5 text-left font-semibold">Mode d'accès</th>
               <th className="px-3 py-2.5 text-left font-semibold">Budget RSE</th>
@@ -534,6 +592,9 @@ function AdminTable() {
                       value={c.secteur ?? ""}
                       onCommit={(v) => patch(c.id, { secteur: v })}
                     />
+                  </td>
+                  <td className="px-3 py-2">
+                    <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
                   </td>
                   <td className="px-3 py-2">
                     <button

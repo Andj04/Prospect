@@ -35,6 +35,7 @@ export type Company = {
   groupe?: string;
   secteur?: string;
   structureDediee: boolean | null;
+  logoUrl?: string;
   // 2. Comment
   modeAcces?: string;
   budgetRSE?: string;
@@ -119,4 +120,14 @@ export type AuditLogEntry = {
   oldData: Record<string, unknown> | null;
   newData: Record<string, unknown> | null;
   createdAt: string;
+};
+
+export type MindmapNodeType = "projet" | "entreprise";
+
+export type MindmapPosition = {
+  type: MindmapNodeType;
+  entiteId: string;
+  projetContextId: string;
+  x: number;
+  y: number;
 };

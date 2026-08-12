@@ -6,6 +6,8 @@ import type {
   Contact,
   ContactFonction,
   HistoriqueEntry,
+  MindmapNodeType,
+  MindmapPosition,
   PipelineItem,
   Priorite,
   PipelineStatut,
@@ -50,6 +52,7 @@ export type EntrepriseRow = {
   pourquoi_proposition: string;
   exclue: boolean;
   raison_exclusion: string;
+  logo_url: string | null;
   entreprise_contacts?: ContactRow[];
   entreprise_projets?: { projet_id: string }[];
 };
@@ -61,6 +64,7 @@ export function mapCompany(row: EntrepriseRow): Company {
     groupe: row.groupe,
     secteur: row.secteur,
     structureDediee: row.structure_dediee,
+    ...(row.logo_url ? { logoUrl: row.logo_url } : {}),
     modeAcces: row.comment_mode_acces,
     budgetRSE: row.comment_budget,
     typeEngagement: (row.comment_type_engagement as Company["typeEngagement"]) || "",
@@ -142,5 +146,23 @@ export function mapAuditLogEntry(row: AuditLogRow): AuditLogEntry {
     oldData: row.old_data,
     newData: row.new_data,
     createdAt: row.created_at,
+  };
+}
+
+export type MindmapPositionRow = {
+  type: MindmapNodeType;
+  entite_id: string;
+  projet_context_id: string;
+  position_x: number;
+  position_y: number;
+};
+
+export function mapMindmapPosition(row: MindmapPositionRow): MindmapPosition {
+  return {
+    type: row.type,
+    entiteId: row.entite_id,
+    projetContextId: row.projet_context_id,
+    x: row.position_x,
+    y: row.position_y,
   };
 }

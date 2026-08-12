@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Building2, GitBranch, History, LogOut, User, Users } from "lucide-react";
+import { Building2, GitBranch, History, LogOut, Network, User, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRealtimeSync } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
@@ -162,6 +162,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <nav className="ml-2 hidden items-center gap-1 md:flex">
               <NavItem to="/" icon={<Building2 className="h-4 w-4" />} label="Entreprises" />
               <NavItem to="/pipeline" icon={<GitBranch className="h-4 w-4" />} label="Pipeline" />
+              <NavItem
+                to="/cartographie"
+                icon={<Network className="h-4 w-4" />}
+                label="Cartographie"
+              />
               {isAdmin && (
                 <NavItem
                   to="/utilisateurs"
@@ -190,6 +195,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="flex items-center gap-1 border-t border-border px-4 py-1.5 md:hidden">
           <NavItem to="/" icon={<Building2 className="h-4 w-4" />} label="Entreprises" />
           <NavItem to="/pipeline" icon={<GitBranch className="h-4 w-4" />} label="Pipeline" />
+          <NavItem to="/cartographie" icon={<Network className="h-4 w-4" />} label="Cartographie" />
           {isAdmin && (
             <NavItem to="/utilisateurs" icon={<Users className="h-4 w-4" />} label="Utilisateurs" />
           )}

@@ -60,6 +60,7 @@ function toRpcPayload(id: string | null, input: Omit<Company, "id">) {
       telephone: c.telephone ?? "",
     })),
     p_projet_ids: input.projets,
+    p_logo_url: input.logoUrl ?? "",
   };
 }
 
@@ -98,6 +99,7 @@ const FIELD_TO_COLUMN = {
   propositionConcrete: "pourquoi_proposition",
   raisonExclusion: "raison_exclusion",
   exclue: "exclue",
+  logoUrl: "logo_url",
 } as const;
 
 export type PatchableField = keyof typeof FIELD_TO_COLUMN;
@@ -134,5 +136,36 @@ export function useDeleteCompany() {
       queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
       queryClient.invalidateQueries({ queryKey: PIPELINE_KEY });
     },
+  });
+}
+
+// Targeted single-link writes for the mind map — deliberately not routed
+// through save_entreprise(), which replaces ALL of an entreprise's project
+// links wholesale and would wipe out its other associations.
+export function useAddEntrepriseProjet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ entrepriseId, projetId }: { entrepriseId: string; projetId: string }) => {
+      const { error } = await supabase
+        .from("entreprise_projets")
+        .insert({ entreprise_id: entrepriseId, projet_id: projetId });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
+  });
+}
+
+export function useRemoveEntrepriseProjet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ entrepriseId, projetId }: { entrepriseId: string; projetId: string }) => {
+      const { error } = await supabase
+        .from("entreprise_projets")
+        .delete()
+        .eq("entreprise_id", entrepriseId)
+        .eq("projet_id", projetId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
   });
 }

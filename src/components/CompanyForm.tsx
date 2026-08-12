@@ -26,6 +26,7 @@ export const emptyCompany: Omit<Company, "id"> = {
   groupe: "",
   secteur: "",
   structureDediee: null,
+  logoUrl: "",
   modeAcces: "",
   budgetRSE: "",
   typeEngagement: "",
@@ -150,6 +151,18 @@ export function CompanyForm({
               checked={!!value.structureDediee}
               onCheckedChange={(v) => set("structureDediee", v)}
             />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="logo-url">URL du logo</Label>
+            <Input
+              id="logo-url"
+              value={value.logoUrl ?? ""}
+              onChange={(e) => set("logoUrl", e.target.value)}
+              placeholder="https://…/logo.png"
+            />
+            <p className="text-xs text-muted-foreground">
+              Utilisé dans la cartographie ; à défaut, les initiales de l'entreprise sont affichées.
+            </p>
           </div>
         </div>
       </Section>
