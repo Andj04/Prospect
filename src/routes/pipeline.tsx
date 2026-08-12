@@ -25,7 +25,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCompanies } from "@/lib/queries/companies";
 import { useAddHistorique, usePipeline, useUpdatePipelineEntry } from "@/lib/queries/pipeline";
-import { useProjects } from "@/lib/queries/projects";
+import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { STATUTS, type PipelineStatut, type Priorite } from "@/lib/types";
 
 export const Route = createFileRoute("/pipeline")({
@@ -55,12 +55,14 @@ function PipelinePage() {
   const { data: companies = [] } = useCompanies();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
+  const { data: allProjets = [] } = useAllProjects();
   const updatePipeline = useUpdatePipelineEntry();
   const addHistorique = useAddHistorique();
 
   const [statut, setStatut] = useState(ALL);
   const [resp, setResp] = useState(ALL);
   const [prio, setPrio] = useState(ALL);
+  const [projetFilter, setProjetFilter] = useState(ALL);
   const [dir, setDir] = useState<1 | -1>(-1);
   const [openId, setOpenId] = useState<string | null>(null);
   const [note, setNote] = useState({ type: "Appel", resume: "" });
@@ -76,10 +78,12 @@ function PipelinePage() {
         (p) =>
           (statut === ALL || p.statut === statut) &&
           (resp === ALL || p.responsable === resp) &&
-          (prio === ALL || p.priorite === prio),
+          (prio === ALL || p.priorite === prio) &&
+          (projetFilter === ALL ||
+            (companies.find((c) => c.id === p.companyId)?.projets.includes(projetFilter) ?? false)),
       )
       .sort((a, b) => a.dernierContact.localeCompare(b.dernierContact) * dir);
-  }, [pipeline, statut, resp, prio, dir]);
+  }, [pipeline, statut, resp, prio, projetFilter, companies, dir]);
 
   const nameOf = (id: string) => companies.find((c) => c.id === id)?.nom ?? "—";
   const current = openId ? pipeline.find((p) => p.companyId === openId) : undefined;
@@ -132,6 +136,19 @@ function PipelinePage() {
               {PRIORITES.map((p) => (
                 <SelectItem key={p} value={p} className="capitalize">
                   {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={projetFilter} onValueChange={setProjetFilter}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Tous les projets</SelectItem>
+              {projets.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.nom}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -247,7 +264,7 @@ function PipelinePage() {
                     <td className="px-4 py-3">
                       <div className="flex max-w-[220px] flex-wrap gap-1">
                         {company?.projets.map((id) => (
-                          <ProjetTag key={id} nom={projetLabel(projets, id)} />
+                          <ProjetTag key={id} nom={projetLabel(allProjets, id)} />
                         ))}
                       </div>
                     </td>

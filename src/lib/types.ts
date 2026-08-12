@@ -25,6 +25,19 @@ export type Contact = {
 export type Projet = {
   id: string;
   nom: string;
+  description?: string;
+  ordre: number;
+  actif: boolean;
+};
+
+// Granularité sous un projet (ex. "Bourses pour bacheliers" sous "Maison
+// des Étoiles"). L'icône est une clé résolue via src/lib/sous-composante-icons.ts.
+export type SousComposante = {
+  id: string;
+  projetId: string;
+  nom: string;
+  description?: string;
+  icone: string;
   ordre: number;
 };
 
@@ -51,8 +64,9 @@ export type Company = {
   propositionConcrete?: string;
   // 5. Contacts
   contacts: Contact[];
-  // 6. Projets Amal Biladi concernés (ids)
+  // 6. Projets Amal Biladi concernés (ids) + sous-composantes précises (ids)
   projets: string[];
+  sousComposantes: string[];
   // 7. Exclusion
   exclue: boolean;
   raisonExclusion?: string;
@@ -108,7 +122,8 @@ export type AppUser = {
 };
 
 export type AuditAction = "INSERT" | "UPDATE" | "DELETE";
-export type AuditTable = "entreprises" | "pipeline" | "pipeline_historique" | "projets";
+export type AuditTable =
+  "entreprises" | "pipeline" | "pipeline_historique" | "projets" | "sous_composantes";
 
 export type AuditLogEntry = {
   id: string;

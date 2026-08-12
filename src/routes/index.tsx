@@ -1,15 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import {
-  ArrowUpDown,
-  Building2,
-  FileSpreadsheet,
-  Pencil,
-  Search,
-  Settings2,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ArrowUpDown, Building2, FileSpreadsheet, Pencil, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
@@ -41,12 +32,7 @@ import {
   type PatchableField,
 } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
-import {
-  useCreateProject,
-  useDeleteProject,
-  useProjects,
-  useRenameProject,
-} from "@/lib/queries/projects";
+import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { exportCompaniesToExcel } from "@/lib/export";
 import type { Company } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -155,80 +141,6 @@ function useFiltered() {
 function EntreprisesPage() {
   const { isAdmin } = useAuth();
   return <AppShell>{isAdmin ? <AdminTable /> : <UserGrid />}</AppShell>;
-}
-
-/* ---------------- Admin : gestion des projets Amal Biladi ---------------- */
-
-function ProjectsManagerDialog() {
-  const { data: projets = [] } = useProjects();
-  const createProject = useCreateProject();
-  const renameProject = useRenameProject();
-  const deleteProject = useDeleteProject();
-  const [newName, setNewName] = useState("");
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Settings2 className="h-4 w-4" />
-          Gérer les projets
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Projets Amal Biladi</DialogTitle>
-          <DialogDescription>
-            Ajoutez, renommez ou supprimez un projet. Les changements sont immédiats pour tous les
-            utilisateurs.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2">
-          {projets.map((p) => (
-            <div key={p.id} className="flex items-center gap-2">
-              <Input
-                defaultValue={p.nom}
-                onBlur={(e) => {
-                  const value = e.target.value.trim();
-                  if (value && value !== p.nom) {
-                    renameProject.mutate({ id: p.id, nom: value });
-                  }
-                }}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteProject.mutate(p.id)}
-                aria-label={`Supprimer ${p.nom}`}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-          {projets.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aucun projet en base.</p>
-          )}
-        </div>
-        <form
-          className="flex items-center gap-2 border-t border-border pt-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const value = newName.trim();
-            if (!value) return;
-            createProject.mutate(value, { onSuccess: () => setNewName("") });
-          }}
-        >
-          <Input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nouveau projet…"
-          />
-          <Button type="submit" size="sm">
-            Ajouter
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 /* ---------------- Admin : tableau type Excel ---------------- */
@@ -488,6 +400,7 @@ function AdminTable() {
   const { list, filters } = useFiltered();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
+  const { data: allProjets = [] } = useAllProjects();
   const patchEntreprise = usePatchEntreprise();
   const deleteCompany = useDeleteCompany();
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "nom", dir: 1 });
@@ -530,7 +443,6 @@ function AdminTable() {
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <ProjectsManagerDialog />
           <Button
             variant="outline"
             onClick={() => void exportCompaniesToExcel(sorted, pipeline, projets)}
@@ -665,7 +577,9 @@ function AdminTable() {
                   <td className="px-3 py-2">
                     <div className="flex max-w-[220px] flex-wrap gap-1">
                       {c.projets.length ? (
-                        c.projets.map((id) => <ProjetTag key={id} nom={projetLabel(projets, id)} />)
+                        c.projets.map((id) => (
+                          <ProjetTag key={id} nom={projetLabel(allProjets, id)} />
+                        ))
                       ) : (
                         <span className="text-muted-foreground/60">—</span>
                       )}
@@ -727,7 +641,7 @@ function AdminTable() {
 
 function UserGrid() {
   const { list, filters } = useFiltered();
-  const { data: projets = [] } = useProjects();
+  const { data: allProjets = [] } = useAllProjects();
   const navigate = useNavigate();
 
   return (
@@ -765,7 +679,7 @@ function UserGrid() {
             )}
             <div className="mt-4 flex flex-wrap gap-1.5">
               {c.projets.map((id) => (
-                <ProjetTag key={id} nom={projetLabel(projets, id)} />
+                <ProjetTag key={id} nom={projetLabel(allProjets, id)} />
               ))}
               {c.exclue && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">

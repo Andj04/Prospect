@@ -19,7 +19,9 @@ import {
   type Contact,
   type ContactFonction,
   type Projet,
+  type SousComposante,
 } from "@/lib/types";
+import { getSousComposanteIcon } from "@/lib/sous-composante-icons";
 
 export const emptyCompany: Omit<Company, "id"> = {
   nom: "",
@@ -39,6 +41,7 @@ export const emptyCompany: Omit<Company, "id"> = {
   propositionConcrete: "",
   contacts: [],
   projets: [],
+  sousComposantes: [],
   exclue: false,
   raisonExclusion: "",
 };
@@ -77,6 +80,7 @@ export function CompanyForm({
   onCancel,
   submitLabel,
   projets,
+  sousComposantes,
 }: {
   value: Omit<Company, "id">;
   onChange: (v: Omit<Company, "id">) => void;
@@ -84,15 +88,35 @@ export function CompanyForm({
   onCancel: () => void;
   submitLabel: string;
   projets: Projet[];
+  sousComposantes: SousComposante[];
 }) {
   const [error, setError] = useState("");
   const set = <K extends keyof Company>(k: K, v: Company[K]) =>
     onChange({ ...value, [k]: v } as Omit<Company, "id">);
 
   const toggleProjet = (id: string) => {
+    if (value.projets.includes(id)) {
+      // Unchecking a project also drops any sous-composante selection that
+      // belongs to it, so we never leave an orphaned relation behind.
+      const scIdsForProjet = new Set(
+        sousComposantes.filter((sc) => sc.projetId === id).map((sc) => sc.id),
+      );
+      onChange({
+        ...value,
+        projets: value.projets.filter((x) => x !== id),
+        sousComposantes: value.sousComposantes.filter((scId) => !scIdsForProjet.has(scId)),
+      });
+    } else {
+      set("projets", [...value.projets, id]);
+    }
+  };
+
+  const toggleSousComposante = (id: string) => {
     set(
-      "projets",
-      value.projets.includes(id) ? value.projets.filter((x) => x !== id) : [...value.projets, id],
+      "sousComposantes",
+      value.sousComposantes.includes(id)
+        ? value.sousComposantes.filter((x) => x !== id)
+        : [...value.sousComposantes, id],
     );
   };
 
@@ -390,6 +414,51 @@ export function CompanyForm({
             <p className="text-sm text-muted-foreground">Aucun projet en base.</p>
           )}
         </div>
+
+        {value.projets.length > 0 && (
+          <div className="space-y-3 pt-1">
+            {value.projets.map((projetId) => {
+              const projet = projets.find((p) => p.id === projetId);
+              const scForProjet = sousComposantes
+                .filter((sc) => sc.projetId === projetId)
+                .sort((a, b) => a.ordre - b.ordre);
+              return (
+                <div
+                  key={projetId}
+                  className="rounded-lg border border-primary/25 bg-accent/30 p-4"
+                >
+                  <h3 className="mb-3 text-sm font-semibold">
+                    Sous-composantes — {projet?.nom ?? projetId}
+                  </h3>
+                  {scForProjet.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Aucune sous-composante définie pour ce projet.
+                    </p>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {scForProjet.map((sc) => {
+                        const Icon = getSousComposanteIcon(sc.icone);
+                        return (
+                          <label
+                            key={sc.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-primary/40"
+                          >
+                            <Checkbox
+                              checked={value.sousComposantes.includes(sc.id)}
+                              onCheckedChange={() => toggleSousComposante(sc.id)}
+                            />
+                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="min-w-0 truncate">{sc.nom}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Section>
 
       <Section n={7} title="Statut d'exclusion" hint="Optionnel">

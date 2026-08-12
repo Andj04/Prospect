@@ -4,7 +4,8 @@ import { mapCompany, type EntrepriseRow } from "@/lib/mappers";
 import type { Company } from "@/lib/types";
 import { COMPANIES_KEY, PIPELINE_KEY } from "./keys";
 
-const SELECT = "*, entreprise_contacts(*), entreprise_projets(projet_id)";
+const SELECT =
+  "*, entreprise_contacts(*), entreprise_projets(projet_id), entreprise_sous_composantes(sous_composante_id)";
 
 export function useCompanies() {
   return useQuery({
@@ -61,6 +62,7 @@ function toRpcPayload(id: string | null, input: Omit<Company, "id">) {
     })),
     p_projet_ids: input.projets,
     p_logo_url: input.logoUrl ?? "",
+    p_sous_composante_ids: input.sousComposantes,
   };
 }
 

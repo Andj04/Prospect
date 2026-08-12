@@ -36,6 +36,7 @@ const TABLE_LABEL: Record<AuditLogEntry["tableName"], string> = {
   pipeline: "Pipeline",
   pipeline_historique: "Historique pipeline",
   projets: "Projet",
+  sous_composantes: "Sous-composante",
 };
 
 function describeEntry(entry: AuditLogEntry, companyName: (id: string) => string) {
@@ -49,6 +50,7 @@ function describeEntry(entry: AuditLogEntry, companyName: (id: string) => string
     case "pipeline_historique":
       return companyName(str("entreprise_id") || entry.recordId);
     case "projets":
+    case "sous_composantes":
       return str("nom") || "—";
     default:
       return entry.recordId;

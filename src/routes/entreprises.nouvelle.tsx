@@ -6,6 +6,7 @@ import { CompanyForm, emptyCompany } from "@/components/CompanyForm";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useSaveCompany } from "@/lib/queries/companies";
 import { useProjects } from "@/lib/queries/projects";
+import { useSousComposantes } from "@/lib/queries/sous-composantes";
 
 export const Route = createFileRoute("/entreprises/nouvelle")({
   head: () => ({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/entreprises/nouvelle")({
 function NouvelleEntreprise() {
   const { isAdmin } = useAuth();
   const { data: projets = [] } = useProjects();
+  const { data: sousComposantes = [] } = useSousComposantes();
   const saveCompany = useSaveCompany();
   const navigate = useNavigate();
   const [draft, setDraft] = useState(emptyCompany);
@@ -55,6 +57,7 @@ function NouvelleEntreprise() {
           value={draft}
           onChange={setDraft}
           projets={projets}
+          sousComposantes={sousComposantes}
           submitLabel="Enregistrer l'entreprise"
           onCancel={() => navigate({ to: "/" })}
           onSubmit={() => {

@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { CompanyForm, emptyCompany } from "@/components/CompanyForm";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCompany, useSaveCompany } from "@/lib/queries/companies";
-import { useProjects } from "@/lib/queries/projects";
+import { useAllProjects } from "@/lib/queries/projects";
+import { useSousComposantes } from "@/lib/queries/sous-composantes";
 import type { Company } from "@/lib/types";
 
 export const Route = createFileRoute("/entreprises/$id_/modifier")({
@@ -35,11 +36,19 @@ function ModifierEntreprise() {
   const { id } = Route.useParams();
   const { isAdmin } = useAuth();
   const { data: company, isLoading } = useCompany(id);
-  const { data: projets = [] } = useProjects();
+  const { data: allProjets = [] } = useAllProjects();
+  const { data: sousComposantes = [] } = useSousComposantes();
   const saveCompany = useSaveCompany();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<Omit<Company, "id">>(emptyCompany);
   const [hydrated, setHydrated] = useState(false);
+
+  // Active projects, plus any inactive one this entreprise is already linked
+  // to — so an existing checked box never silently vanishes.
+  const formProjets = useMemo(
+    () => allProjets.filter((p) => p.actif || (company?.projets.includes(p.id) ?? false)),
+    [allProjets, company],
+  );
 
   useEffect(() => {
     if (company && !hydrated) {
@@ -85,7 +94,8 @@ function ModifierEntreprise() {
         <CompanyForm
           value={draft}
           onChange={setDraft}
-          projets={projets}
+          projets={formProjets}
+          sousComposantes={sousComposantes}
           submitLabel="Enregistrer les modifications"
           onCancel={() => navigate({ to: "/entreprises/$id", params: { id } })}
           onSubmit={() => {

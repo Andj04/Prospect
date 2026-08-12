@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCompany } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
-import { useProjects } from "@/lib/queries/projects";
+import { useAllProjects } from "@/lib/queries/projects";
 import { CONTACT_FONCTIONS } from "@/lib/types";
 import { exportCompanyToPdf } from "@/lib/export";
 
@@ -60,7 +60,7 @@ function FicheEntreprise() {
   const { isAdmin } = useAuth();
   const { data: c, isLoading } = useCompany(id);
   const { data: pipeline = [] } = usePipeline();
-  const { data: projets = [] } = useProjects();
+  const { data: projets = [] } = useAllProjects();
   const pl = pipeline.find((p) => p.companyId === id);
 
   if (isLoading) {

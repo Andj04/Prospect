@@ -1,6 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Building2, GitBranch, History, LogOut, Network, User, Users } from "lucide-react";
+import {
+  Building2,
+  FolderKanban,
+  GitBranch,
+  History,
+  LogOut,
+  Network,
+  User,
+  Users,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRealtimeSync } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
@@ -169,6 +178,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
               {isAdmin && (
                 <NavItem
+                  to="/projets"
+                  icon={<FolderKanban className="h-4 w-4" />}
+                  label="Projets"
+                />
+              )}
+              {isAdmin && (
+                <NavItem
                   to="/utilisateurs"
                   icon={<Users className="h-4 w-4" />}
                   label="Utilisateurs"
@@ -196,6 +212,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem to="/" icon={<Building2 className="h-4 w-4" />} label="Entreprises" />
           <NavItem to="/pipeline" icon={<GitBranch className="h-4 w-4" />} label="Pipeline" />
           <NavItem to="/cartographie" icon={<Network className="h-4 w-4" />} label="Cartographie" />
+          {isAdmin && (
+            <NavItem to="/projets" icon={<FolderKanban className="h-4 w-4" />} label="Projets" />
+          )}
           {isAdmin && (
             <NavItem to="/utilisateurs" icon={<Users className="h-4 w-4" />} label="Utilisateurs" />
           )}

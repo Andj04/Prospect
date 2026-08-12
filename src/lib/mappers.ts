@@ -12,6 +12,7 @@ import type {
   Priorite,
   PipelineStatut,
   Projet,
+  SousComposante,
 } from "./types";
 
 export type ContactRow = {
@@ -55,6 +56,7 @@ export type EntrepriseRow = {
   logo_url: string | null;
   entreprise_contacts?: ContactRow[];
   entreprise_projets?: { projet_id: string }[];
+  entreprise_sous_composantes?: { sous_composante_id: string }[];
 };
 
 export function mapCompany(row: EntrepriseRow): Company {
@@ -77,6 +79,7 @@ export function mapCompany(row: EntrepriseRow): Company {
     propositionConcrete: row.pourquoi_proposition,
     contacts: (row.entreprise_contacts ?? []).map(mapContact),
     projets: (row.entreprise_projets ?? []).map((p) => p.projet_id),
+    sousComposantes: (row.entreprise_sous_composantes ?? []).map((s) => s.sous_composante_id),
     exclue: row.exclue,
     raisonExclusion: row.raison_exclusion,
   };
@@ -117,10 +120,42 @@ export function mapHistorique(row: HistoriqueRow): HistoriqueEntry {
   return { id: row.id, date: row.date, type: row.type, resume: row.resume, auteur: row.auteur };
 }
 
-export type ProjetRow = { id: string; nom: string; ordre: number };
+export type ProjetRow = {
+  id: string;
+  nom: string;
+  description: string | null;
+  ordre: number;
+  actif: boolean;
+};
 
 export function mapProjet(row: ProjetRow): Projet {
-  return { id: row.id, nom: row.nom, ordre: row.ordre };
+  return {
+    id: row.id,
+    nom: row.nom,
+    ...(row.description ? { description: row.description } : {}),
+    ordre: row.ordre,
+    actif: row.actif,
+  };
+}
+
+export type SousComposanteRow = {
+  id: string;
+  projet_id: string;
+  nom: string;
+  description: string | null;
+  icone: string;
+  ordre: number;
+};
+
+export function mapSousComposante(row: SousComposanteRow): SousComposante {
+  return {
+    id: row.id,
+    projetId: row.projet_id,
+    nom: row.nom,
+    ...(row.description ? { description: row.description } : {}),
+    icone: row.icone,
+    ordre: row.ordre,
+  };
 }
 
 export type AuditLogRow = {
