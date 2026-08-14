@@ -12,6 +12,33 @@ export const CONTACT_FONCTIONS: { value: ContactFonction; label: string }[] = [
   { value: "autre", label: "Autre" },
 ];
 
+// Secteurs d'activité normalisés — remplace les descriptions libres saisies
+// au cas par cas, qui produisaient autant de valeurs distinctes que
+// d'entreprises. Toute entreprise existante a été reclassée dans l'une de
+// ces catégories (voir scripts/README ou l'historique de migration).
+export const SECTEUR_OPTIONS = [
+  "Agroalimentaire et boissons",
+  "Banque, finance et assurance",
+  "Distribution et grande consommation",
+  "Énergie et carburants",
+  "Mines et industrie extractive",
+  "BTP, matériaux et construction",
+  "Immobilier et aménagement urbain",
+  "Télécoms et technologies",
+  "Conseil, IT et transformation digitale",
+  "Relation client et BPO",
+  "Automobile et mobilité",
+  "Aéronautique",
+  "Cosmétique et bien-être",
+  "Pharmaceutique et santé",
+  "Tourisme et hôtellerie",
+  "Logistique et transport",
+  "Agriculture et irrigation",
+  "Économie circulaire",
+  "Eaux minérales et thermalisme",
+  "Matériel électrique et industriel",
+] as const;
+
 export type Contact = {
   id: string;
   fonction: ContactFonction;

@@ -13,6 +13,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Filter, RotateCcw, Save, Search } from "lucide-react";
 import { toast } from "sonner";
+import { EntrepriseDetailsSheet } from "@/components/cartographie/EntrepriseDetailsSheet";
 import {
   EntrepriseNode,
   type EntrepriseFlowNode,
@@ -93,6 +94,9 @@ export function MindMapView() {
   const [filterSecteurs, setFilterSecteurs] = useState<Set<string>>(new Set());
   const [filterStatuts, setFilterStatuts] = useState<Set<PipelineStatut>>(new Set());
   const [pendingLink, setPendingLink] = useState<PendingLink | null>(null);
+  const [detailsNode, setDetailsNode] = useState<{ entrepriseId: string; projetId: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 250);
@@ -278,18 +282,19 @@ export function MindMapView() {
   };
 
   const onNodeClick = (_event: unknown, node: FlowNode) => {
-    if (!isAdmin || node.type !== "entreprise") return;
-    const projetNode = nodes.find(
-      (n): n is ProjetFlowNode => n.type === "projet" && n.data.projetId === node.data.projetId,
-    );
-    setPendingLink({
-      mode: "delete",
-      entrepriseId: node.data.entrepriseId,
-      entrepriseNom: node.data.nom,
-      projetId: node.data.projetId,
-      projetNom: projetNode?.data.nom ?? "",
-    });
+    if (node.type !== "entreprise") return;
+    setDetailsNode({ entrepriseId: node.data.entrepriseId, projetId: node.data.projetId });
   };
+
+  const detailsCompany = useMemo(
+    () => (detailsNode ? companies.find((c) => c.id === detailsNode.entrepriseId) : undefined),
+    [companies, detailsNode],
+  );
+  const detailsProjetNom = useMemo(
+    () => (detailsNode ? projets.find((p) => p.id === detailsNode.projetId)?.nom : undefined),
+    [projets, detailsNode],
+  );
+  const detailsStatut = detailsCompany ? statusByCompany.get(detailsCompany.id) : undefined;
 
   const onEdgeClick = (_event: unknown, edge: LinkEdge) => {
     if (!isAdmin || !edge.data) return;
@@ -485,7 +490,8 @@ export function MindMapView() {
         {isAdmin && (
           <div className="ml-auto flex items-center gap-2">
             <p className="hidden text-xs text-muted-foreground lg:block">
-              Créer/supprimer un lien est immédiat · ce bouton ne sauvegarde que la disposition
+              Cliquez sur une entreprise pour ses infos · glissez pour créer un lien · cliquez sur
+              un lien pour le supprimer
             </p>
             <Button size="sm" onClick={handleSaveLayout} disabled={saveMindmapPositions.isPending}>
               <Save className="h-4 w-4" />
@@ -540,6 +546,14 @@ export function MindMapView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EntrepriseDetailsSheet
+        company={detailsCompany}
+        projetNom={detailsProjetNom}
+        pipelineStatut={detailsStatut}
+        open={detailsNode !== null}
+        onOpenChange={(o) => !o && setDetailsNode(null)}
+      />
     </div>
   );
 }

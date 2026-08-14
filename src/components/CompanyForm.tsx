@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   CONTACT_FONCTIONS,
+  SECTEUR_OPTIONS,
   type Company,
   type Contact,
   type ContactFonction,
@@ -160,11 +161,21 @@ export function CompanyForm({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="secteur">Secteur d'activité</Label>
-            <Input
-              id="secteur"
-              value={value.secteur ?? ""}
-              onChange={(e) => set("secteur", e.target.value)}
-            />
+            <Select
+              {...(value.secteur ? { value: value.secteur } : {})}
+              onValueChange={(v) => set("secteur", v)}
+            >
+              <SelectTrigger id="secteur">
+                <SelectValue placeholder="Choisir un secteur…" />
+              </SelectTrigger>
+              <SelectContent>
+                {SECTEUR_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
             <Label htmlFor="fondation" className="text-sm font-normal">

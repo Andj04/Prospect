@@ -34,7 +34,7 @@ import {
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { exportCompaniesToExcel } from "@/lib/export";
-import type { Company } from "@/lib/types";
+import { SECTEUR_OPTIONS, type Company } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -65,11 +65,6 @@ function useFiltered() {
   const [projet, setProjet] = useState(ALL);
   const [secteur, setSecteur] = useState(ALL);
   const [fondation, setFondation] = useState(ALL);
-
-  const secteurs = useMemo(
-    () => Array.from(new Set(companies.map((c) => c.secteur).filter(Boolean))) as string[],
-    [companies],
-  );
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -115,7 +110,7 @@ function useFiltered() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>Tous les secteurs</SelectItem>
-          {secteurs.map((s) => (
+          {SECTEUR_OPTIONS.map((s) => (
             <SelectItem key={s} value={s}>
               {s}
             </SelectItem>
@@ -500,10 +495,21 @@ function AdminTable() {
                     />
                   </td>
                   <td className="px-3 py-2">
-                    <EditableCell
-                      value={c.secteur ?? ""}
-                      onCommit={(v) => patch(c.id, { secteur: v })}
-                    />
+                    <Select
+                      {...(c.secteur ? { value: c.secteur } : {})}
+                      onValueChange={(v) => patch(c.id, { secteur: v })}
+                    >
+                      <SelectTrigger className="h-8 w-[170px] text-xs">
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SECTEUR_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="px-3 py-2">
                     <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
