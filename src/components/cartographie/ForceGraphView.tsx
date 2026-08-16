@@ -102,7 +102,7 @@ export function ForceGraphView() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [hoveredProjetId, setHoveredProjetId] = useState<string | null>(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [isolatedNodeId, setIsolatedNodeId] = useState<string | null>(null);
   const [filterProjetIds, setFilterProjetIds] = useState<Set<string>>(new Set());
   const [filterSecteurs, setFilterSecteurs] = useState<Set<string>>(new Set());
@@ -176,10 +176,25 @@ export function ForceGraphView() {
   }, [companiesLoading, projetsLoading]);
 
   useEffect(() => {
-    if (graphData.nodes.length === 0) return;
-    const t = setTimeout(() => fgRef.current?.zoomToFit(600, 60), 500);
+    if (!ForceGraph2D || graphData.nodes.length === 0) return;
+    // Default d3-force spacing is tuned for small graphs — with ~100 nodes
+    // it reads as a dense, illegible clump. Push nodes further apart and
+    // lengthen links so the layout uses the full canvas.
+    const charge = fgRef.current?.d3Force("charge") as
+      { strength?: (v: number) => void } | undefined;
+    charge?.strength?.(-300);
+    const link = fgRef.current?.d3Force("link") as { distance?: (v: number) => void } | undefined;
+    link?.distance?.(100);
+    fgRef.current?.d3ReheatSimulation();
+    // Frame the connected cluster, not the handful of unlinked companies
+    // that drift far off to the side — otherwise the initial zoom-to-fit
+    // shrinks the whole graph down just to include those outliers.
+    const t = setTimeout(
+      () => fgRef.current?.zoomToFit(600, 80, (n) => n.kind === "projet" || n.projetIds.length > 0),
+      600,
+    );
     return () => clearTimeout(t);
-  }, [graphData.nodes.length]);
+  }, [ForceGraph2D, graphData.nodes.length]);
 
   // Adjacency (entreprise node id <-> projet node id), derived straight from
   // the source data rather than the (possibly link-mutated) graphData so it
@@ -203,7 +218,7 @@ export function ForceGraphView() {
     return map;
   }, [companies, activeProjetIds]);
 
-  const focusNodeId = isolatedNodeId ?? (hoveredProjetId ? `projet:${hoveredProjetId}` : null);
+  const focusNodeId = isolatedNodeId ?? hoveredNodeId;
   const focusSet = useMemo(() => {
     if (!focusNodeId) return null;
     const neighbors = neighborsByNodeId.get(focusNodeId) ?? new Set<string>();
@@ -360,7 +375,7 @@ export function ForceGraphView() {
       }
     }
 
-    if (globalScale > 0.55) {
+    if (globalScale > 0.35) {
       ctx.font = `${10 / globalScale}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
@@ -500,16 +515,8 @@ export function ForceGraphView() {
               visibleNodeIds.has(resolveEndpointId(l.source)) &&
               visibleNodeIds.has(resolveEndpointId(l.target))
             }
-            linkColor={(l) => {
-              const s = resolveEndpointId(l.source);
-              const t = resolveEndpointId(l.target);
-              const op = Math.min(computeOpacity(s), computeOpacity(t));
-              return `rgba(148, 163, 184, ${0.35 * op + 0.05})`;
-            }}
-            linkWidth={1}
-            onNodeHover={(node) =>
-              setHoveredProjetId(node && node.kind === "projet" ? node.projetId : null)
-            }
+            linkColor={() => "rgba(0, 0, 0, 0)"}
+            onNodeHover={(node) => setHoveredNodeId(node ? String(node.id) : null)}
             onNodeClick={(node) => {
               setIsolatedNodeId(String(node.id));
               if (node.kind === "entreprise") {
