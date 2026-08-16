@@ -549,7 +549,7 @@ export function MindMapView() {
 
       <EntrepriseDetailsSheet
         company={detailsCompany}
-        projetNom={detailsProjetNom}
+        projetNoms={detailsProjetNom ? [detailsProjetNom] : []}
         pipelineStatut={detailsStatut}
         open={detailsNode !== null}
         onOpenChange={(o) => !o && setDetailsNode(null)}

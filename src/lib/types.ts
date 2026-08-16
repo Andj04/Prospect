@@ -23,6 +23,7 @@ export const SECTEUR_OPTIONS = [
   "Énergie et carburants",
   "Mines et industrie extractive",
   "BTP, matériaux et construction",
+  "Ameublement et décoration",
   "Immobilier et aménagement urbain",
   "Télécoms et technologies",
   "Conseil, IT et transformation digitale",

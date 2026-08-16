@@ -52,13 +52,13 @@ function CompanyAvatar({ company }: { company: Company }) {
 
 export function EntrepriseDetailsSheet({
   company,
-  projetNom,
+  projetNoms,
   pipelineStatut,
   open,
   onOpenChange,
 }: {
   company: Company | undefined;
-  projetNom: string | undefined;
+  projetNoms: string[];
   pipelineStatut: PipelineStatut | undefined;
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -88,11 +88,14 @@ export function EntrepriseDetailsSheet({
 
             <div className="space-y-4 px-4 pb-8">
               <div className="flex flex-wrap items-center gap-2">
-                {projetNom && (
-                  <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                    Projet : {projetNom}
+                {projetNoms.map((nom) => (
+                  <span
+                    key={nom}
+                    className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground"
+                  >
+                    Projet : {nom}
                   </span>
-                )}
+                ))}
                 {pipelineStatut && <StatutBadge statut={pipelineStatut} />}
               </div>
 
@@ -117,6 +120,8 @@ export function EntrepriseDetailsSheet({
                   </p>
                 )}
                 <Field label="Alignement thématique" value={company.alignementThematique} />
+                <Field label="Précédent le plus fort" value={company.precedentFort} />
+                <Field label="Proposition concrète" value={company.propositionConcrete} />
               </dl>
 
               <Button asChild variant="outline" size="sm" className="w-full">

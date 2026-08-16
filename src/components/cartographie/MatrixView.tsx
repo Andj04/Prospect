@@ -36,7 +36,7 @@ export function MatrixView() {
         />
       </div>
 
-      <div className="card-soft max-h-[70vh] overflow-auto">
+      <div className="card-soft themed-scrollbar max-h-[70vh] overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-muted/95 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
             <tr>

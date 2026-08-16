@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpDown, Building2, FileSpreadsheet, Pencil, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { DualScrollTable } from "@/components/DualScrollTable";
 import { ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -450,7 +451,7 @@ function AdminTable() {
 
       {filters}
 
-      <div className="card-soft overflow-x-auto">
+      <DualScrollTable className="card-soft">
         <table className="w-full min-w-[1400px] border-collapse text-sm">
           <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -638,7 +639,7 @@ function AdminTable() {
             Aucune entreprise ne correspond à votre recherche.
           </p>
         )}
-      </div>
+      </DualScrollTable>
     </div>
   );
 }

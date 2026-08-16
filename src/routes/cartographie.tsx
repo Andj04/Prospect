@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ByProjectView } from "@/components/cartographie/ByProjectView";
+import { ForceGraphView } from "@/components/cartographie/ForceGraphView";
 import { MatrixView } from "@/components/cartographie/MatrixView";
 import { MindMapView } from "@/components/cartographie/MindMapView";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/cartographie")({
   component: CartographiePage,
 });
 
-type View = "mindmap" | "byProject" | "matrix";
+type View = "mindmap" | "byProject" | "matrix" | "network";
 
 function CartographiePage() {
   const [view, setView] = useState<View>("mindmap");
@@ -40,6 +41,7 @@ function CartographiePage() {
               <TabsTrigger value="mindmap">Mind map</TabsTrigger>
               <TabsTrigger value="byProject">Par projet</TabsTrigger>
               <TabsTrigger value="matrix">Matricielle</TabsTrigger>
+              <TabsTrigger value="network">Réseau</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -47,6 +49,7 @@ function CartographiePage() {
         {view === "mindmap" && <MindMapView />}
         {view === "byProject" && <ByProjectView />}
         {view === "matrix" && <MatrixView />}
+        {view === "network" && <ForceGraphView />}
       </div>
     </AppShell>
   );
