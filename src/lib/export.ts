@@ -7,6 +7,7 @@ import {
   type Company,
   type PipelineItem,
   type Projet,
+  type SousComposante,
 } from "@/lib/types";
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -39,9 +40,17 @@ export async function exportCompaniesToExcel(
   companies: Company[],
   pipeline: PipelineItem[],
   projets: Projet[],
+  sousComposantes: SousComposante[],
 ) {
   const projetName = (id: string) => projets.find((p) => p.id === id)?.nom ?? id;
   const statutLabel = (s: string) => STATUTS.find((x) => x.value === s)?.label ?? s;
+  const contactFonctionLabel = (f: string) =>
+    CONTACT_FONCTIONS.find((x) => x.value === f)?.label ?? f;
+  const sousComposanteLabel = (id: string) => {
+    const sc = sousComposantes.find((s) => s.id === id);
+    if (!sc) return id;
+    return `${projetName(sc.projetId)} — ${sc.nom}`;
+  };
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Entreprises");
@@ -50,21 +59,27 @@ export async function exportCompaniesToExcel(
     { header: "Groupe", key: "groupe", width: 20 },
     { header: "Secteur", key: "secteur", width: 20 },
     { header: "Structure dédiée", key: "structureDediee", width: 16 },
+    { header: "Logo (URL)", key: "logoUrl", width: 30 },
     { header: "Mode d'accès au financement", key: "modeAcces", width: 34 },
     { header: "Budget RSE", key: "budgetRSE", width: 22 },
     { header: "Type d'engagement", key: "typeEngagement", width: 16 },
     { header: "Descriptif", key: "descriptifActivites", width: 40 },
     { header: "Programmes", key: "programmes", width: 40 },
     { header: "Projets déjà financés", key: "projetsFinances", width: 40 },
+    { header: "Notes complémentaires", key: "notesComplementaires", width: 40 },
     { header: "Alignement thématique", key: "alignementThematique", width: 40 },
-    { header: "Contacts", key: "contacts", width: 30 },
+    { header: "Précédent le plus fort", key: "precedentFort", width: 40 },
+    { header: "Proposition concrète", key: "propositionConcrete", width: 40 },
+    { header: "Contacts", key: "contacts", width: 40 },
     { header: "Projets Amal Biladi", key: "projets", width: 34 },
+    { header: "Sous-composantes", key: "sousComposantes", width: 40 },
     { header: "Statut pipeline", key: "statut", width: 22 },
     { header: "Exclue", key: "exclue", width: 10 },
     { header: "Raison exclusion", key: "raisonExclusion", width: 34 },
   ];
   sheet.getRow(1).font = { bold: true };
   sheet.getRow(1).alignment = { vertical: "middle" };
+  sheet.getColumn("contacts").alignment = { wrapText: true, vertical: "top" };
 
   for (const c of companies) {
     const pl = pipeline.find((p) => p.companyId === c.id);
@@ -73,18 +88,26 @@ export async function exportCompaniesToExcel(
       groupe: c.groupe ?? "",
       secteur: c.secteur ?? "",
       structureDediee: structureDedieeLabel(c.structureDediee),
+      logoUrl: c.logoUrl ?? "",
       modeAcces: c.modeAcces ?? "",
       budgetRSE: c.budgetRSE ?? "",
       typeEngagement: c.typeEngagement ?? "",
       descriptifActivites: c.descriptifActivites ?? "",
       programmes: c.programmes ?? "",
       projetsFinances: c.projetsFinances ?? "",
+      notesComplementaires: c.notesComplementaires ?? "",
       alignementThematique: c.alignementThematique ?? "",
+      precedentFort: c.precedentFort ?? "",
+      propositionConcrete: c.propositionConcrete ?? "",
       contacts: c.contacts
-        .map((ct) => ct.nom)
-        .filter(Boolean)
-        .join(", "),
+        .map((ct) => {
+          const details = [ct.email, ct.telephone, ct.linkedin].filter(Boolean).join(" · ");
+          const base = [ct.nom, contactFonctionLabel(ct.fonction)].filter(Boolean).join(" — ");
+          return details ? `${base} (${details})` : base;
+        })
+        .join("\n"),
       projets: c.projets.map(projetName).join(", "),
+      sousComposantes: c.sousComposantes.map(sousComposanteLabel).join("; "),
       statut: pl ? statutLabel(pl.statut) : "",
       exclue: c.exclue ? "Oui" : "Non",
       raisonExclusion: c.raisonExclusion ?? "",

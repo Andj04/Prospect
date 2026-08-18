@@ -34,6 +34,7 @@ import {
 } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects, useProjects } from "@/lib/queries/projects";
+import { useSousComposantes } from "@/lib/queries/sous-composantes";
 import { exportCompaniesToExcel } from "@/lib/export";
 import { SECTEUR_OPTIONS, type Company } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -395,8 +396,8 @@ function EditableCell({
 function AdminTable() {
   const { list, filters } = useFiltered();
   const { data: pipeline = [] } = usePipeline();
-  const { data: projets = [] } = useProjects();
   const { data: allProjets = [] } = useAllProjects();
+  const { data: sousComposantes = [] } = useSousComposantes();
   const patchEntreprise = usePatchEntreprise();
   const deleteCompany = useDeleteCompany();
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "nom", dir: 1 });
@@ -441,7 +442,9 @@ function AdminTable() {
         <div className="flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
-            onClick={() => void exportCompaniesToExcel(sorted, pipeline, projets)}
+            onClick={() =>
+              void exportCompaniesToExcel(sorted, pipeline, allProjets, sousComposantes)
+            }
           >
             <FileSpreadsheet className="h-4 w-4" />
             Exporter en Excel
