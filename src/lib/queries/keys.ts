@@ -6,3 +6,4 @@ export const USERS_KEY = ["users"] as const;
 export const AUDIT_LOG_KEY = ["audit-log"] as const;
 export const MINDMAP_POSITIONS_KEY = ["mindmap-positions"] as const;
 export const SOUS_COMPOSANTES_KEY = ["sous-composantes"] as const;
+export const IMPORT_BATCHES_KEY = ["import-batches"] as const;

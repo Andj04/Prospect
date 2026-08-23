@@ -98,6 +98,17 @@ export type Company = {
   // 7. Exclusion
   exclue: boolean;
   raisonExclusion?: string;
+  // Lot d'import (null = créée normalement, pas de bandeau dans le tableau Admin)
+  importBatchId?: string;
+};
+
+// Regroupe visuellement, dans le tableau Admin, les entreprises importées en
+// masse (ex. un nouveau lot de prospection) — pour ne pas les mélanger aux
+// entreprises créées normalement.
+export type ImportBatch = {
+  id: string;
+  label: string;
+  createdAt: string;
 };
 
 export type PipelineStatut =
@@ -151,7 +162,12 @@ export type AppUser = {
 
 export type AuditAction = "INSERT" | "UPDATE" | "DELETE";
 export type AuditTable =
-  "entreprises" | "pipeline" | "pipeline_historique" | "projets" | "sous_composantes";
+  | "entreprises"
+  | "pipeline"
+  | "pipeline_historique"
+  | "projets"
+  | "sous_composantes"
+  | "import_batches";
 
 export type AuditLogEntry = {
   id: string;

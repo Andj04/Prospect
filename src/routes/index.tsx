@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ArrowUpDown, Building2, FileSpreadsheet, Pencil, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -32,6 +32,7 @@ import {
   usePatchEntreprise,
   type PatchableField,
 } from "@/lib/queries/companies";
+import { useImportBatches, useRenameImportBatch } from "@/lib/queries/import-batches";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
@@ -393,11 +394,57 @@ function EditableCell({
   );
 }
 
+const ADMIN_TABLE_COLUMN_COUNT = 17;
+
+type CompanyGroup = {
+  key: string;
+  label: string;
+  createdAt?: string;
+  batchId?: string;
+  rows: Company[];
+};
+
+function BatchDividerRow({
+  label,
+  count,
+  createdAt,
+  onRename,
+}: {
+  label: string;
+  count: number;
+  createdAt?: string;
+  onRename?: (label: string) => void;
+}) {
+  return (
+    <tr className="border-t-2 border-primary/25 bg-primary/5">
+      <td colSpan={ADMIN_TABLE_COLUMN_COUNT} className="px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {onRename ? (
+            <EditableCell
+              value={label}
+              onCommit={(v) => v.trim() && onRename(v.trim())}
+              className="text-sm font-semibold text-primary-deep"
+            />
+          ) : (
+            <span className="px-1.5 py-1 text-sm font-semibold text-muted-foreground">{label}</span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {count} entreprise{count > 1 ? "s" : ""}
+            {createdAt && ` · importé le ${new Date(createdAt).toLocaleDateString("fr-FR")}`}
+          </span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function AdminTable() {
   const { list, filters } = useFiltered();
   const { data: pipeline = [] } = usePipeline();
   const { data: allProjets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
+  const { data: importBatches = [] } = useImportBatches();
+  const renameImportBatch = useRenameImportBatch();
   const patchEntreprise = usePatchEntreprise();
   const deleteCompany = useDeleteCompany();
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "nom", dir: 1 });
@@ -406,6 +453,38 @@ function AdminTable() {
     () => [...list].sort((a, b) => (a[sort.key] ?? "").localeCompare(b[sort.key] ?? "") * sort.dir),
     [list, sort],
   );
+
+  // Group by lot d'import so a freshly imported batch never blends into the
+  // existing rows — most recent batch first, un-batched companies last. The
+  // per-column sort above is preserved within each group (filter keeps order).
+  const groups = useMemo((): CompanyGroup[] => {
+    const byBatch = new Map<string, Company[]>();
+    const baseline: Company[] = [];
+    for (const c of sorted) {
+      if (c.importBatchId) {
+        const arr = byBatch.get(c.importBatchId) ?? [];
+        arr.push(c);
+        byBatch.set(c.importBatchId, arr);
+      } else {
+        baseline.push(c);
+      }
+    }
+    const orderedBatches = [...importBatches].sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+    return [
+      ...orderedBatches.map((b) => ({
+        key: b.id,
+        label: b.label,
+        createdAt: b.createdAt,
+        batchId: b.id,
+        rows: byBatch.get(b.id) ?? [],
+      })),
+      { key: "__baseline__", label: "Entreprises existantes", rows: baseline },
+    ];
+  }, [sorted, importBatches]);
+
+  const hasVisibleBatchGroup = groups.some((g) => g.batchId && g.rows.length > 0);
 
   const patch = (id: string, fields: Partial<Record<PatchableField, string | boolean>>) => {
     patchEntreprise.mutate(
@@ -478,162 +557,185 @@ function AdminTable() {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((c) => {
-              const pl = pipeline.find((p) => p.companyId === c.id);
-              return (
-                <tr
-                  key={c.id}
-                  className="border-t border-border transition-colors hover:bg-muted/40"
-                >
-                  <td className="px-3 py-2 font-medium">
-                    <EditableCell
-                      value={c.nom}
-                      onCommit={(v) => patch(c.id, { nom: v })}
-                      className="font-semibold"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableCell
-                      value={c.groupe ?? ""}
-                      onCommit={(v) => patch(c.id, { groupe: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <Select
-                      {...(c.secteur ? { value: c.secteur } : {})}
-                      onValueChange={(v) => patch(c.id, { secteur: v })}
-                    >
-                      <SelectTrigger className="h-8 w-[170px] text-xs">
-                        <SelectValue placeholder="—" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SECTEUR_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      onClick={() => patch(c.id, { structureDediee: !c.structureDediee })}
-                      className="rounded-md bg-muted px-2 py-1 text-xs font-medium hover:bg-accent"
-                    >
-                      {c.structureDediee == null ? "—" : c.structureDediee ? "Oui" : "Non"}
-                    </button>
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableLongCell
-                      value={c.modeAcces}
-                      title="Mode d'accès au financement"
-                      onSave={(v) => patch(c.id, { modeAcces: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableCell
-                      value={c.budgetRSE ?? ""}
-                      onCommit={(v) => patch(c.id, { budgetRSE: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <Select
-                      {...(c.typeEngagement ? { value: c.typeEngagement } : {})}
-                      onValueChange={(v) => patch(c.id, { typeEngagement: v })}
-                    >
-                      <SelectTrigger className="h-8 w-[130px] text-xs">
-                        <SelectValue placeholder="—" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="recurrent">Récurrent</SelectItem>
-                        <SelectItem value="ponctuel">Ponctuel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableLongCell
-                      value={c.descriptifActivites}
-                      title="Descriptif des activités"
-                      onSave={(v) => patch(c.id, { descriptifActivites: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableLongCell
-                      value={c.programmes}
-                      title="Programmes"
-                      onSave={(v) => patch(c.id, { programmes: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableLongCell
-                      value={c.projetsFinances}
-                      title="Projets déjà financés"
-                      onSave={(v) => patch(c.id, { projetsFinances: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <EditableLongCell
-                      value={c.alignementThematique}
-                      title="Alignement thématique"
-                      onSave={(v) => patch(c.id, { alignementThematique: v })}
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {c.contacts.length ? `${c.contacts.length} contact(s)` : "—"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex max-w-[220px] flex-wrap gap-1">
-                      {c.projets.length ? (
-                        c.projets.map((id) => (
-                          <ProjetTag key={id} nom={projetLabel(allProjets, id)} />
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground/60">—</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">{pl && <StatutBadge statut={pl.statut} />}</td>
-                  <td className="px-3 py-2">
-                    <ExclusionCell
-                      exclue={c.exclue}
-                      raison={c.raisonExclusion}
-                      onSave={(exclue, raisonExclusion) => patch(c.id, { exclue, raisonExclusion })}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to="/entreprises/$id" params={{ id: c.id }}>
-                          Fiche
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to="/entreprises/$id/modifier" params={{ id: c.id }}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          deleteCompany.mutate(c.id, {
-                            onSuccess: () => toast.success(`${c.nom} supprimée`),
-                            onError: (err) =>
-                              toast.error(
-                                err instanceof Error ? err.message : "Échec de la suppression",
-                              ),
-                          });
-                        }}
+            {groups.flatMap((group): ReactNode[] => {
+              if (group.rows.length === 0) return [];
+              const rowNodes = group.rows.map((c) => {
+                const pl = pipeline.find((p) => p.companyId === c.id);
+                return (
+                  <tr
+                    key={c.id}
+                    className="border-t border-border transition-colors hover:bg-muted/40"
+                  >
+                    <td className="px-3 py-2 font-medium">
+                      <EditableCell
+                        value={c.nom}
+                        onCommit={(v) => patch(c.id, { nom: v })}
+                        className="font-semibold"
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableCell
+                        value={c.groupe ?? ""}
+                        onCommit={(v) => patch(c.id, { groupe: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Select
+                        {...(c.secteur ? { value: c.secteur } : {})}
+                        onValueChange={(v) => patch(c.id, { secteur: v })}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
+                        <SelectTrigger className="h-8 w-[170px] text-xs">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SECTEUR_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        onClick={() => patch(c.id, { structureDediee: !c.structureDediee })}
+                        className="rounded-md bg-muted px-2 py-1 text-xs font-medium hover:bg-accent"
+                      >
+                        {c.structureDediee == null ? "—" : c.structureDediee ? "Oui" : "Non"}
+                      </button>
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableLongCell
+                        value={c.modeAcces}
+                        title="Mode d'accès au financement"
+                        onSave={(v) => patch(c.id, { modeAcces: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableCell
+                        value={c.budgetRSE ?? ""}
+                        onCommit={(v) => patch(c.id, { budgetRSE: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Select
+                        {...(c.typeEngagement ? { value: c.typeEngagement } : {})}
+                        onValueChange={(v) => patch(c.id, { typeEngagement: v })}
+                      >
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="recurrent">Récurrent</SelectItem>
+                          <SelectItem value="ponctuel">Ponctuel</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableLongCell
+                        value={c.descriptifActivites}
+                        title="Descriptif des activités"
+                        onSave={(v) => patch(c.id, { descriptifActivites: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableLongCell
+                        value={c.programmes}
+                        title="Programmes"
+                        onSave={(v) => patch(c.id, { programmes: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableLongCell
+                        value={c.projetsFinances}
+                        title="Projets déjà financés"
+                        onSave={(v) => patch(c.id, { projetsFinances: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <EditableLongCell
+                        value={c.alignementThematique}
+                        title="Alignement thématique"
+                        onSave={(v) => patch(c.id, { alignementThematique: v })}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                      {c.contacts.length ? `${c.contacts.length} contact(s)` : "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex max-w-[220px] flex-wrap gap-1">
+                        {c.projets.length ? (
+                          c.projets.map((id) => (
+                            <ProjetTag key={id} nom={projetLabel(allProjets, id)} />
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground/60">—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">{pl && <StatutBadge statut={pl.statut} />}</td>
+                    <td className="px-3 py-2">
+                      <ExclusionCell
+                        exclue={c.exclue}
+                        raison={c.raisonExclusion}
+                        onSave={(exclue, raisonExclusion) =>
+                          patch(c.id, { exclue, raisonExclusion })
+                        }
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to="/entreprises/$id" params={{ id: c.id }}>
+                            Fiche
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to="/entreprises/$id/modifier" params={{ id: c.id }}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            deleteCompany.mutate(c.id, {
+                              onSuccess: () => toast.success(`${c.nom} supprimée`),
+                              onError: (err) =>
+                                toast.error(
+                                  err instanceof Error ? err.message : "Échec de la suppression",
+                                ),
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              });
+              const batchId = group.batchId;
+              return hasVisibleBatchGroup
+                ? [
+                    <BatchDividerRow
+                      key={`divider-${group.key}`}
+                      label={group.label}
+                      count={group.rows.length}
+                      {...(group.createdAt ? { createdAt: group.createdAt } : {})}
+                      {...(batchId
+                        ? {
+                            onRename: (label: string) =>
+                              renameImportBatch.mutate({ id: batchId, label }),
+                          }
+                        : {})}
+                    />,
+                    ...rowNodes,
+                  ]
+                : rowNodes;
             })}
           </tbody>
         </table>

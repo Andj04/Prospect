@@ -6,6 +6,7 @@ import type {
   Contact,
   ContactFonction,
   HistoriqueEntry,
+  ImportBatch,
   MindmapNodeType,
   MindmapPosition,
   PipelineItem,
@@ -54,6 +55,7 @@ export type EntrepriseRow = {
   exclue: boolean;
   raison_exclusion: string;
   logo_url: string | null;
+  import_batch_id: string | null;
   entreprise_contacts?: ContactRow[];
   entreprise_projets?: { projet_id: string }[];
   entreprise_sous_composantes?: { sous_composante_id: string }[];
@@ -82,6 +84,7 @@ export function mapCompany(row: EntrepriseRow): Company {
     sousComposantes: (row.entreprise_sous_composantes ?? []).map((s) => s.sous_composante_id),
     exclue: row.exclue,
     raisonExclusion: row.raison_exclusion,
+    ...(row.import_batch_id ? { importBatchId: row.import_batch_id } : {}),
   };
 }
 
@@ -156,6 +159,16 @@ export function mapSousComposante(row: SousComposanteRow): SousComposante {
     icone: row.icone,
     ordre: row.ordre,
   };
+}
+
+export type ImportBatchRow = {
+  id: string;
+  label: string;
+  created_at: string;
+};
+
+export function mapImportBatch(row: ImportBatchRow): ImportBatch {
+  return { id: row.id, label: row.label, createdAt: row.created_at };
 }
 
 export type AuditLogRow = {
