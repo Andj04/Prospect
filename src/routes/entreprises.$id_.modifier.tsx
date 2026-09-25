@@ -1,7 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { CompanyForm, emptyCompany } from "@/components/CompanyForm";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCompany, useSaveCompany } from "@/lib/queries/companies";
@@ -88,9 +91,13 @@ function ModifierEntreprise() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Modifier — {company.nom}</h1>
-        </div>
+        <Button variant="ghost" size="sm" asChild className="-ml-2">
+          <Link to="/entreprises/$id" params={{ id }}>
+            <ArrowLeft className="h-4 w-4" />
+            Retour à la fiche
+          </Link>
+        </Button>
+        <PageHeader title={`Modifier — ${company.nom}`} />
         <CompanyForm
           value={draft}
           onChange={setDraft}

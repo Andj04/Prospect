@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { BackButton } from "@/components/BackButton";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ function MonComptePage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-lg space-y-6">
+        <BackButton fallbackTo="/" label="Retour" />
         <PageHeader title="Mon compte" description="Informations de connexion et sécurité." />
 
         <section className="card-soft space-y-3 p-5 sm:p-6">

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { BackButton } from "@/components/BackButton";
 import { CompanyForm, emptyCompany } from "@/components/CompanyForm";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useSaveCompany } from "@/lib/queries/companies";
@@ -47,6 +48,7 @@ function NouvelleEntreprise() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-6">
+        <BackButton fallbackTo="/" label="Retour" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Ajouter une entreprise</h1>
           <p className="mt-1 text-sm text-muted-foreground">

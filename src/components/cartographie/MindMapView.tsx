@@ -9,9 +9,10 @@ import {
   type Connection,
   type Edge,
   type NodeTypes,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Filter, RotateCcw, Save, Search } from "lucide-react";
+import { Filter, LayoutGrid, RotateCcw, Save, Search } from "lucide-react";
 import { toast } from "sonner";
 import { EntrepriseDetailsSheet } from "@/components/cartographie/EntrepriseDetailsSheet";
 import {
@@ -87,6 +88,7 @@ export function MindMapView() {
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<LinkEdge>([]);
   const initializedRef = useRef(false);
+  const flowRef = useRef<ReactFlowInstance<FlowNode, LinkEdge> | null>(null);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -180,6 +182,9 @@ export function MindMapView() {
     setNodes([...projetNodes, ...entrepriseNodes]);
     setEdges(initialEdges);
     initializedRef.current = true;
+    // Les noeuds arrivent après le montage : recadrer la vue pour qu'aucun ne
+    // reste hors champ.
+    setTimeout(() => void flowRef.current?.fitView({ padding: 0.1 }), 100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companiesLoading, projetsLoading, positionsLoading]);
 
@@ -402,6 +407,23 @@ export function MindMapView() {
     });
   };
 
+  // Recalcule une disposition sans chevauchement (ignore les positions
+  // sauvegardées) puis recadre la vue. Rien n'est enregistré tant que l'admin
+  // ne clique pas sur « Sauvegarder la disposition ».
+  const handleAutoLayout = () => {
+    const defaults = computeDefaultLayout(projets, occurrences);
+    setNodes((nds) =>
+      nds.map((n) => {
+        const pos =
+          n.type === "projet"
+            ? defaults.projetPositions.get(n.data.projetId)
+            : defaults.entreprisePositions.get(`${n.data.entrepriseId}::${n.data.projetId}`);
+        return pos ? { ...n, position: pos } : n;
+      }),
+    );
+    setTimeout(() => void flowRef.current?.fitView({ padding: 0.1, duration: 300 }), 50);
+  };
+
   const resetFilters = () => {
     setFilterProjets(new Set());
     setFilterSecteurs(new Set());
@@ -487,6 +509,11 @@ export function MindMapView() {
           </PopoverContent>
         </Popover>
 
+        <Button variant="outline" size="sm" onClick={handleAutoLayout}>
+          <LayoutGrid className="h-4 w-4" />
+          Réorganiser
+        </Button>
+
         {isAdmin && (
           <div className="ml-auto flex items-center gap-2">
             <p className="hidden text-xs text-muted-foreground lg:block">
@@ -514,8 +541,11 @@ export function MindMapView() {
           nodeTypes={nodeTypes}
           nodesDraggable={isAdmin}
           nodesConnectable={isAdmin}
+          onInit={(instance) => {
+            flowRef.current = instance;
+          }}
           fitView
-          minZoom={0.1}
+          minZoom={0.05}
         >
           <Background />
           <Controls />

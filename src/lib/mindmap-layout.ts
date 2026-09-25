@@ -22,22 +22,25 @@ export function buildOccurrences(companies: Company[], projets: Projet[]): Occur
   return occurrences;
 }
 
-const CLUSTER_WIDTH = 900;
-const CLUSTER_HEIGHT = 700;
 const PROJET_NODE_WIDTH = 200;
-const ENTREPRISE_COLS_PER_CLUSTER = 4;
-const ENTREPRISE_SPACING_X = 190;
-const ENTREPRISE_SPACING_Y = 120;
-const ENTREPRISE_ROW_START_Y = 170;
+const ENTREPRISE_SPACING_X = 200;
+const ENTREPRISE_SPACING_Y = 90;
+const ENTREPRISE_ROW_START_Y = 150;
+const CLUSTER_GAP_X = 140;
+const CLUSTER_GAP_Y = 120;
+// Largeur cible d'une "étagère" de clusters avant de passer à la ligne suivante.
+const SHELF_TARGET_WIDTH = 3200;
+const MAX_ENTREPRISE_COLS = 6;
 
 export type LayoutPositions = {
   projetPositions: Map<string, { x: number; y: number }>;
   entreprisePositions: Map<string, { x: number; y: number }>;
 };
 
-// Deterministic grid-of-clusters layout: projects arranged in a grid, each
-// project's companies arranged in a wrapped sub-grid centered under it — no
-// general graph-layout library needed for this "grouped by project" shape.
+// Deterministic layout without overlaps: each project's companies form a
+// wrapped grid sized to their count (so a project with 40 companies gets a
+// wide, tall cluster instead of spilling onto its neighbours), and clusters
+// are packed left-to-right in shelves that wrap at SHELF_TARGET_WIDTH.
 export function computeDefaultLayout(
   projets: Projet[],
   occurrences: Occurrence[],
@@ -49,33 +52,44 @@ export function computeDefaultLayout(
     byProjet.set(occ.projetId, list);
   }
 
-  const cols = Math.max(1, Math.ceil(Math.sqrt(projets.length)));
   const projetPositions = new Map<string, { x: number; y: number }>();
   const entreprisePositions = new Map<string, { x: number; y: number }>();
 
-  projets.forEach((projet, index) => {
-    const col = index % cols;
-    const row = Math.floor(index / cols);
-    const clusterX = col * CLUSTER_WIDTH;
-    const clusterY = row * CLUSTER_HEIGHT;
-    const centerX = clusterX + CLUSTER_WIDTH / 2;
+  let cursorX = 0;
+  let cursorY = 0;
+  let shelfHeight = 0;
 
-    projetPositions.set(projet.id, { x: centerX - PROJET_NODE_WIDTH / 2, y: clusterY });
-
+  for (const projet of projets) {
     const companies = byProjet.get(projet.id) ?? [];
-    const entCols = Math.max(1, Math.min(ENTREPRISE_COLS_PER_CLUSTER, companies.length));
-    const gridWidth = (entCols - 1) * ENTREPRISE_SPACING_X;
-    const startX = centerX - gridWidth / 2;
+    const entCols = Math.max(
+      1,
+      Math.min(MAX_ENTREPRISE_COLS, Math.ceil(Math.sqrt(companies.length * 1.6))),
+    );
+    const rows = Math.ceil(companies.length / entCols);
+    const clusterWidth = Math.max(PROJET_NODE_WIDTH, entCols * ENTREPRISE_SPACING_X);
+    const clusterHeight = ENTREPRISE_ROW_START_Y + Math.max(1, rows) * ENTREPRISE_SPACING_Y;
 
+    if (cursorX > 0 && cursorX + clusterWidth > SHELF_TARGET_WIDTH) {
+      cursorX = 0;
+      cursorY += shelfHeight + CLUSTER_GAP_Y;
+      shelfHeight = 0;
+    }
+
+    const centerX = cursorX + clusterWidth / 2;
+    projetPositions.set(projet.id, { x: centerX - PROJET_NODE_WIDTH / 2, y: cursorY });
+
+    const gridWidth = (entCols - 1) * ENTREPRISE_SPACING_X;
+    const startX = centerX - gridWidth / 2 - 85; // 85 = demi-largeur d'un noeud entreprise
     companies.forEach((occ, i) => {
-      const c = i % entCols;
-      const r = Math.floor(i / entCols);
       entreprisePositions.set(occ.key, {
-        x: startX + c * ENTREPRISE_SPACING_X,
-        y: clusterY + ENTREPRISE_ROW_START_Y + r * ENTREPRISE_SPACING_Y,
+        x: startX + (i % entCols) * ENTREPRISE_SPACING_X,
+        y: cursorY + ENTREPRISE_ROW_START_Y + Math.floor(i / entCols) * ENTREPRISE_SPACING_Y,
       });
     });
-  });
+
+    cursorX += clusterWidth + CLUSTER_GAP_X;
+    shelfHeight = Math.max(shelfHeight, clusterHeight);
+  }
 
   return { projetPositions, entreprisePositions };
 }

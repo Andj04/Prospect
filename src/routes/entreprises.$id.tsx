@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Download, Linkedin, Mail, Pencil, Phone, X } from "lucide-react";
+import { Download, Linkedin, Mail, Pencil, Phone, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { BackButton } from "@/components/BackButton";
 import { PrioriteBadge, ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -89,12 +90,7 @@ function FicheEntreprise() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4" />
-            Retour aux entreprises
-          </Link>
-        </Button>
+        <BackButton fallbackTo="/" label="Retour" />
 
         <div className="card-soft overflow-hidden">
           <div className="brand-gradient h-1.5 w-full" />
