@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useAuditLog } from "@/lib/queries/audit";
 import { useCompanies } from "@/lib/queries/companies";
@@ -80,13 +81,10 @@ function JournalPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Journal d'activité</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Qui a créé, modifié ou supprimé quoi côté admin — visible uniquement par les
-            administrateurs.
-          </p>
-        </div>
+        <PageHeader
+          title="Journal d'activité"
+          description="Qui a créé, modifié ou supprimé quoi côté admin — visible uniquement par les administrateurs."
+        />
 
         <div className="card-soft overflow-x-auto">
           <table className="w-full min-w-[800px] border-collapse text-sm">

@@ -6,14 +6,26 @@ export const projetLabel = (projets: Projet[], id: string) =>
 
 export const statutLabel = (s: PipelineStatut) => STATUTS.find((x) => x.value === s)?.label ?? s;
 
-const STATUT_CLASS: Record<PipelineStatut, string> = {
-  identifie: "bg-muted text-muted-foreground",
-  "premier-contact": "bg-accent text-accent-foreground",
-  "en-discussion": "bg-primary/15 text-primary-deep",
-  "visite-programmee": "bg-primary/25 text-primary-deep",
-  "proposition-envoyee": "bg-primary/40 text-primary-deep",
-  "partenariat-signe": "bg-primary text-primary-foreground",
+// Progression : gris (identifié) → bleu (échanges) → orange (proposition) → vert (signé).
+export const STATUT_CLASS: Record<PipelineStatut, string> = {
+  identifie: "bg-muted text-muted-foreground ring-1 ring-inset ring-border",
+  "premier-contact": "bg-primary/10 text-primary-deep",
+  "en-discussion": "bg-primary/20 text-primary-deep",
+  "visite-programmee": "bg-brand-orange/20 text-warning-foreground",
+  "proposition-envoyee": "bg-brand-orange/35 text-warning-foreground",
+  "partenariat-signe": "bg-success text-primary-foreground",
   "sans-suite": "bg-destructive/10 text-destructive",
+};
+
+// Couleur d'accentuation par statut (en-têtes de colonnes Kanban, pastilles).
+export const STATUT_DOT: Record<PipelineStatut, string> = {
+  identifie: "bg-muted-foreground/50",
+  "premier-contact": "bg-primary-soft",
+  "en-discussion": "bg-primary",
+  "visite-programmee": "bg-brand-orange",
+  "proposition-envoyee": "bg-warning",
+  "partenariat-signe": "bg-success",
+  "sans-suite": "bg-destructive",
 };
 
 export function StatutBadge({ statut }: { statut: PipelineStatut }) {
@@ -30,8 +42,8 @@ export function StatutBadge({ statut }: { statut: PipelineStatut }) {
 }
 
 const PRIO_CLASS: Record<Priorite, string> = {
-  haute: "bg-primary/15 text-primary-deep border-primary/30",
-  moyenne: "bg-muted text-muted-foreground border-border",
+  haute: "bg-brand-orange/20 text-warning-foreground border-brand-orange/50",
+  moyenne: "bg-primary/10 text-primary-deep border-primary/20",
   basse: "bg-muted/60 text-muted-foreground border-border",
 };
 

@@ -30,7 +30,7 @@ function EntrepriseNodeImpl({ data }: NodeProps<EntrepriseFlowNode>) {
     <div
       className={cn(
         "flex w-[170px] cursor-pointer items-center gap-2 rounded-full border-2 border-border bg-card px-2.5 py-1.5 shadow-sm transition-all duration-150 hover:border-primary/50",
-        data.matched && "z-10 scale-110 border-amber-400 shadow-lg ring-2 ring-amber-300",
+        data.matched && "z-10 scale-110 border-brand-orange shadow-lg ring-2 ring-brand-orange/50",
         data.dimmed && "opacity-30",
       )}
       title={data.nom}

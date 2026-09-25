@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus, Settings2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -280,13 +281,10 @@ function ProjetsPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Projets Amal Biladi</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Un projet désactivé disparaît des formulaires et filtres, mais les entreprises déjà
-            liées le conservent — jamais de suppression définitive.
-          </p>
-        </div>
+        <PageHeader
+          title="Projets Amal Biladi"
+          description="Un projet désactivé disparaît des formulaires et filtres, mais les entreprises déjà liées le conservent — jamais de suppression définitive."
+        />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="card-soft overflow-x-auto">

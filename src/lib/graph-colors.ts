@@ -1,19 +1,19 @@
-// Palette qualitative fixe pour la vue Réseau — chaque projet Amal Biladi
+// Palette qualitative fixe (les 4 premières teintes viennent du logo) pour la vue Réseau — chaque projet Amal Biladi
 // obtient une couleur stable (dérivée d'un hash de son id), indépendante de
 // l'ordre ou du nombre de projets actifs à un instant donné.
 const PALETTE = [
-  "#2563EB", // bleu
-  "#DC2626", // rouge
-  "#D97706", // ambre
-  "#059669", // émeraude
-  "#7C3AED", // violet
-  "#DB2777", // rose
+  "#3B6FA5", // bleu Amal Biladi
+  "#EDA339", // orange soleil
+  "#7FAE2A", // vert feuille
+  "#703070", // violet
   "#0891B2", // cyan
-  "#65A30D", // lime
-  "#EA580C", // orange
+  "#DC2626", // rouge
   "#4F46E5", // indigo
+  "#D97706", // ambre foncé
   "#0D9488", // teal
-  "#C026D3", // fuchsia
+  "#DB2777", // rose
+  "#65A30D", // lime
+  "#5E90C1", // bleu clair du logo
 ];
 
 export const GRAPH_NEUTRAL_COLOR = "#94A3B8"; // slate-400 — entreprise sans projet lié

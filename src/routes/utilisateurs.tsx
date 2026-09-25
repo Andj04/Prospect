@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,12 +65,10 @@ function UtilisateursPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gérer les utilisateurs</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Chaque compte créé reçoit un mot de passe temporaire à changer à la première connexion.
-          </p>
-        </div>
+        <PageHeader
+          title="Gérer les utilisateurs"
+          description="Chaque compte créé reçoit un mot de passe temporaire à changer à la première connexion."
+        />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="card-soft overflow-x-auto">

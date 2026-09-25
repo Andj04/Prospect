@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
 import { ByProjectView } from "@/components/cartographie/ByProjectView";
 import { ForceGraphView } from "@/components/cartographie/ForceGraphView";
 import { MatrixView } from "@/components/cartographie/MatrixView";
@@ -29,13 +30,10 @@ function CartographiePage() {
     <AppShell>
       <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Cartographie</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Entreprises qualifiées par projet Amal Biladi — une entreprise liée à plusieurs
-              projets apparaît une fois par projet.
-            </p>
-          </div>
+          <PageHeader
+            title="Cartographie"
+            description="Entreprises qualifiées par projet Amal Biladi — une entreprise liée à plusieurs projets apparaît une fois par projet."
+          />
           <Tabs value={view} onValueChange={(v) => setView(v as View)}>
             <TabsList>
               <TabsTrigger value="mindmap">Mind map</TabsTrigger>

@@ -1,12 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowUpDown,
   Building2,
   ChevronDown,
   ChevronRight,
+  Columns3,
   FileSpreadsheet,
+  Handshake,
+  Landmark,
+  MessagesSquare,
   Pencil,
+  RotateCcw,
   Search,
   Trash2,
   X,
@@ -14,6 +19,15 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { DualScrollTable } from "@/components/DualScrollTable";
+import { PageHeader, StatCard, StatGrid } from "@/components/page-header";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,8 +107,21 @@ function useFiltered() {
     });
   }, [companies, q, projet, secteur, fondation]);
 
+  const activeFilters = [
+    q.trim() !== "",
+    projet !== ALL,
+    secteur !== ALL,
+    fondation !== ALL,
+  ].filter(Boolean).length;
+  const reset = () => {
+    setQ("");
+    setProjet(ALL);
+    setSecteur(ALL);
+    setFondation(ALL);
+  };
+
   const filters = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="card-soft flex flex-wrap items-center gap-2 p-3">
       <div className="relative min-w-[220px] flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -140,10 +167,16 @@ function useFiltered() {
           <SelectItem value="false">Sans fondation / non renseigné</SelectItem>
         </SelectContent>
       </Select>
+      {activeFilters > 0 && (
+        <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground">
+          <RotateCcw className="h-4 w-4" />
+          Réinitialiser ({activeFilters})
+        </Button>
+      )}
     </div>
   );
 
-  return { list, filters };
+  return { list, filters, total: companies.length };
 }
 
 function EntreprisesPage() {
@@ -395,16 +428,111 @@ function EditableCell({
         setEditing(true);
       }}
       className={cn(
-        "block w-full min-w-[110px] rounded px-1.5 py-1 text-left transition-colors hover:bg-accent",
+        "group/cell block w-full min-w-[110px] rounded px-1.5 py-1 text-left transition-colors hover:bg-accent",
         className,
       )}
     >
-      {value || <span className="text-muted-foreground/60">—</span>}
+      <span className="inline-flex items-center gap-1.5">
+        {value || <span className="text-muted-foreground/60">—</span>}
+        <Pencil className="h-3 w-3 shrink-0 text-muted-foreground/0 transition-colors group-hover/cell:text-muted-foreground/60" />
+      </span>
     </button>
   );
 }
 
 const ADMIN_TABLE_COLUMN_COUNT = 18;
+
+// Colonnes secondaires masquables du tableau admin (le reste — #, entreprise,
+// groupe, secteur, statut, actions — est toujours affiché).
+const OPTIONAL_COLUMNS: { key: string; label: string }[] = [
+  { key: "logo", label: "Logo" },
+  { key: "fondation", label: "Fondation" },
+  { key: "modeAcces", label: "Mode d'accès" },
+  { key: "budget", label: "Budget RSE" },
+  { key: "engagement", label: "Engagement" },
+  { key: "descriptif", label: "Descriptif" },
+  { key: "programmes", label: "Programmes" },
+  { key: "projetsFinances", label: "Projets financés" },
+  { key: "alignement", label: "Alignement" },
+  { key: "contacts", label: "Contacts" },
+  { key: "projetsAB", label: "Projets AB" },
+  { key: "exclusion", label: "Exclusion" },
+];
+const DEFAULT_HIDDEN = ["modeAcces", "budget", "programmes", "projetsFinances", "contacts"];
+const HIDDEN_COLS_STORAGE_KEY = "entreprises-hidden-columns";
+
+function useHiddenColumns() {
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(DEFAULT_HIDDEN));
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HIDDEN_COLS_STORAGE_KEY);
+      if (raw) setHiddenCols(new Set(JSON.parse(raw) as string[]));
+    } catch {
+      /* stockage indisponible : on garde les valeurs par défaut */
+    }
+  }, []);
+
+  const persist = (next: Set<string>) => {
+    setHiddenCols(next);
+    try {
+      localStorage.setItem(HIDDEN_COLS_STORAGE_KEY, JSON.stringify([...next]));
+    } catch {
+      /* ignoré */
+    }
+  };
+
+  const toggleCol = (key: string) => {
+    const next = new Set(hiddenCols);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    persist(next);
+  };
+
+  return { hiddenCols, toggleCol, resetCols: () => persist(new Set(DEFAULT_HIDDEN)) };
+}
+
+function ColumnsMenu({
+  hidden,
+  onToggle,
+  onReset,
+}: {
+  hidden: Set<string>;
+  onToggle: (key: string) => void;
+  onReset: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">
+          <Columns3 className="h-4 w-4" />
+          Colonnes
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Colonnes affichées</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {OPTIONAL_COLUMNS.map(({ key, label }) => (
+          <DropdownMenuCheckboxItem
+            key={key}
+            checked={!hidden.has(key)}
+            onCheckedChange={() => onToggle(key)}
+            onSelect={(e) => e.preventDefault()}
+          >
+            {label}
+          </DropdownMenuCheckboxItem>
+        ))}
+        <DropdownMenuSeparator />
+        <button
+          onClick={onReset}
+          className="w-full rounded-sm px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+        >
+          Rétablir l'affichage par défaut
+        </button>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 type NumberedCompany = { company: Company; number: number };
 
@@ -466,8 +594,15 @@ function BatchDividerRow({
 }
 
 function AdminTable() {
-  const { list, filters } = useFiltered();
+  const { list, filters, total } = useFiltered();
   const { data: pipeline = [] } = usePipeline();
+  const { hiddenCols, toggleCol, resetCols } = useHiddenColumns();
+  const inProgress = pipeline.filter((p) =>
+    ["premier-contact", "en-discussion", "visite-programmee", "proposition-envoyee"].includes(
+      p.statut,
+    ),
+  ).length;
+  const signed = pipeline.filter((p) => p.statut === "partenariat-signe").length;
   const { data: allProjets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
   const { data: importBatches = [] } = useImportBatches();
@@ -537,7 +672,13 @@ function AdminTable() {
   };
 
   const th = (key: SortKey, label: string) => (
-    <th className="px-3 py-2.5 text-left font-semibold">
+    <th
+      data-col={key}
+      className={cn(
+        "px-3 py-3 text-left font-semibold",
+        key === "nom" && "sticky left-12 z-10 bg-muted shadow-[1px_0_0_var(--border)]",
+      )}
+    >
       <button
         className="inline-flex items-center gap-1 hover:text-primary"
         onClick={() => setSort((s) => ({ key, dir: s.key === key && s.dir === 1 ? -1 : 1 }))}
@@ -550,51 +691,115 @@ function AdminTable() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">Entreprises &amp; fondations</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {sorted.length} entrée{sorted.length > 1 ? "s" : ""} · édition en ligne, cliquez sur une
-            cellule pour la modifier.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              void exportCompaniesToExcel(sorted, pipeline, allProjets, sousComposantes)
-            }
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            Exporter en Excel
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Entreprises & fondations"
+        description="Édition en ligne : cliquez sur une cellule pour la modifier."
+        actions={
+          <>
+            <ColumnsMenu hidden={hiddenCols} onToggle={toggleCol} onReset={resetCols} />
+            <Button
+              variant="outline"
+              onClick={() =>
+                void exportCompaniesToExcel(sorted, pipeline, allProjets, sousComposantes)
+              }
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Exporter en Excel
+            </Button>
+          </>
+        }
+      />
+
+      <StatGrid>
+        <StatCard
+          label="Entreprises & fondations"
+          value={total}
+          hint={sorted.length !== total ? `${sorted.length} après filtres` : "dans la base"}
+          icon={<Building2 className="h-5 w-5" />}
+          tone="blue"
+        />
+        <StatCard
+          label="Avec fondation dédiée"
+          value={list.filter((c) => c.structureDediee).length}
+          hint="dans la sélection"
+          icon={<Landmark className="h-5 w-5" />}
+          tone="neutral"
+        />
+        <StatCard
+          label="Échanges en cours"
+          value={inProgress}
+          hint="contact, discussion, proposition"
+          icon={<MessagesSquare className="h-5 w-5" />}
+          tone="orange"
+        />
+        <StatCard
+          label="Partenariats signés"
+          value={signed}
+          icon={<Handshake className="h-5 w-5" />}
+          tone="green"
+        />
+      </StatGrid>
 
       {filters}
 
+      {hiddenCols.size > 0 && (
+        <style>{`${[...hiddenCols].map((k) => `#entreprises-table [data-col="${k}"]`).join(",")}{display:none}`}</style>
+      )}
       <DualScrollTable className="card-soft">
-        <table className="w-full min-w-[1400px] border-collapse text-sm">
-          <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
+        <table id="entreprises-table" className="w-full min-w-[1000px] border-collapse text-sm">
+          <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-3 py-2.5 text-right font-semibold text-muted-foreground/70">#</th>
+              <th
+                data-col="num"
+                className="sticky left-0 z-10 w-12 min-w-12 bg-muted px-3 py-3 text-right font-semibold text-muted-foreground/70"
+              >
+                #
+              </th>
               {th("nom", "Entreprise")}
               {th("groupe", "Groupe")}
               {th("secteur", "Secteur")}
-              <th className="px-3 py-2.5 text-left font-semibold">Logo</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Fondation</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Mode d'accès</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Budget RSE</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Engagement</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Descriptif</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Programmes</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Projets financés</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Alignement</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Contacts</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Projets AB</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Statut</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Exclusion</th>
-              <th className="px-3 py-2.5 text-right font-semibold">Actions</th>
+              <th data-col="logo" className="px-3 py-3 text-left font-semibold">
+                Logo
+              </th>
+              <th data-col="fondation" className="px-3 py-3 text-left font-semibold">
+                Fondation
+              </th>
+              <th data-col="modeAcces" className="px-3 py-3 text-left font-semibold">
+                Mode d'accès
+              </th>
+              <th data-col="budget" className="px-3 py-3 text-left font-semibold">
+                Budget RSE
+              </th>
+              <th data-col="engagement" className="px-3 py-3 text-left font-semibold">
+                Engagement
+              </th>
+              <th data-col="descriptif" className="px-3 py-3 text-left font-semibold">
+                Descriptif
+              </th>
+              <th data-col="programmes" className="px-3 py-3 text-left font-semibold">
+                Programmes
+              </th>
+              <th data-col="projetsFinances" className="px-3 py-3 text-left font-semibold">
+                Projets financés
+              </th>
+              <th data-col="alignement" className="px-3 py-3 text-left font-semibold">
+                Alignement
+              </th>
+              <th data-col="contacts" className="px-3 py-3 text-left font-semibold">
+                Contacts
+              </th>
+              <th data-col="projetsAB" className="px-3 py-3 text-left font-semibold">
+                Projets AB
+              </th>
+              <th data-col="statut" className="px-3 py-3 text-left font-semibold">
+                Statut
+              </th>
+              <th data-col="exclusion" className="px-3 py-3 text-left font-semibold">
+                Exclusion
+              </th>
+              <th data-col="actions" className="px-3 py-3 text-right font-semibold">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -608,25 +813,31 @@ function AdminTable() {
                     return (
                       <tr
                         key={c.id}
-                        className="border-t border-border transition-colors hover:bg-muted/40"
+                        className="group border-t border-border transition-colors hover:bg-secondary"
                       >
-                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground/70">
+                        <td
+                          data-col="num"
+                          className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground/70 sticky left-0 z-10 w-12 min-w-12 bg-card group-hover:bg-secondary"
+                        >
                           {number}
                         </td>
-                        <td className="px-3 py-2 font-medium">
+                        <td
+                          data-col="nom"
+                          className="px-3 py-2 font-medium sticky left-12 z-10 bg-card shadow-[1px_0_0_var(--border)] group-hover:bg-secondary"
+                        >
                           <EditableCell
                             value={c.nom}
                             onCommit={(v) => patch(c.id, { nom: v })}
                             className="font-semibold"
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="groupe" className="px-3 py-2">
                           <EditableCell
                             value={c.groupe ?? ""}
                             onCommit={(v) => patch(c.id, { groupe: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="secteur" className="px-3 py-2">
                           <Select
                             {...(c.secteur ? { value: c.secteur } : {})}
                             onValueChange={(v) => patch(c.id, { secteur: v })}
@@ -643,10 +854,10 @@ function AdminTable() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="logo" className="px-3 py-2">
                           <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="fondation" className="px-3 py-2">
                           <button
                             onClick={() => patch(c.id, { structureDediee: !c.structureDediee })}
                             className="rounded-md bg-muted px-2 py-1 text-xs font-medium hover:bg-accent"
@@ -654,20 +865,20 @@ function AdminTable() {
                             {c.structureDediee == null ? "—" : c.structureDediee ? "Oui" : "Non"}
                           </button>
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="modeAcces" className="px-3 py-2">
                           <EditableLongCell
                             value={c.modeAcces}
                             title="Mode d'accès au financement"
                             onSave={(v) => patch(c.id, { modeAcces: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="budget" className="px-3 py-2">
                           <EditableCell
                             value={c.budgetRSE ?? ""}
                             onCommit={(v) => patch(c.id, { budgetRSE: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="engagement" className="px-3 py-2">
                           <Select
                             {...(c.typeEngagement ? { value: c.typeEngagement } : {})}
                             onValueChange={(v) => patch(c.id, { typeEngagement: v })}
@@ -681,38 +892,38 @@ function AdminTable() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="descriptif" className="px-3 py-2">
                           <EditableLongCell
                             value={c.descriptifActivites}
                             title="Descriptif des activités"
                             onSave={(v) => patch(c.id, { descriptifActivites: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="programmes" className="px-3 py-2">
                           <EditableLongCell
                             value={c.programmes}
                             title="Programmes"
                             onSave={(v) => patch(c.id, { programmes: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="projetsFinances" className="px-3 py-2">
                           <EditableLongCell
                             value={c.projetsFinances}
                             title="Projets déjà financés"
                             onSave={(v) => patch(c.id, { projetsFinances: v })}
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="alignement" className="px-3 py-2">
                           <EditableLongCell
                             value={c.alignementThematique}
                             title="Alignement thématique"
                             onSave={(v) => patch(c.id, { alignementThematique: v })}
                           />
                         </td>
-                        <td className="px-3 py-2 text-xs text-muted-foreground">
+                        <td data-col="contacts" className="px-3 py-2 text-xs text-muted-foreground">
                           {c.contacts.length ? `${c.contacts.length} contact(s)` : "—"}
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="projetsAB" className="px-3 py-2">
                           <div className="flex max-w-[220px] flex-wrap gap-1">
                             {c.projets.length ? (
                               c.projets.map((id) => (
@@ -723,8 +934,10 @@ function AdminTable() {
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2">{pl && <StatutBadge statut={pl.statut} />}</td>
-                        <td className="px-3 py-2">
+                        <td data-col="statut" className="px-3 py-2">
+                          {pl && <StatutBadge statut={pl.statut} />}
+                        </td>
+                        <td data-col="exclusion" className="px-3 py-2">
                           <ExclusionCell
                             exclue={c.exclue}
                             raison={c.raisonExclusion}
@@ -733,7 +946,7 @@ function AdminTable() {
                             }
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td data-col="actions" className="px-3 py-2">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="sm" asChild>
                               <Link to="/entreprises/$id" params={{ id: c.id }}>
@@ -807,13 +1020,10 @@ function UserGrid() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Entreprises &amp; fondations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Consultez les fiches de prospection — {list.length} entrée
-          {list.length > 1 ? "s" : ""}.
-        </p>
-      </div>
+      <PageHeader
+        title="Entreprises & fondations"
+        description={`Consultez les fiches de prospection — ${list.length} entrée${list.length > 1 ? "s" : ""}.`}
+      />
       {filters}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((c: Company) => (

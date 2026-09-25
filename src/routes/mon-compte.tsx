@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,12 +26,7 @@ function MonComptePage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-lg space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mon compte</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Informations de connexion et sécurité.
-          </p>
-        </div>
+        <PageHeader title="Mon compte" description="Informations de connexion et sécurité." />
 
         <section className="card-soft space-y-3 p-5 sm:p-6">
           <h2 className="text-base font-semibold">Informations</h2>
@@ -67,7 +63,7 @@ function MonComptePage() {
         <section className="card-soft space-y-4 p-5 sm:p-6">
           <h2 className="text-base font-semibold">Changer de mot de passe</h2>
           {profile?.passwordChangeRequired && (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
               Vous utilisez un mot de passe temporaire — merci de le changer maintenant.
             </p>
           )}
