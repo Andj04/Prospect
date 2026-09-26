@@ -43,10 +43,15 @@ type PipelinePatch = Partial<{
   prochaineAction: string;
 }>;
 
+type PipelineUpdateVars = { companyId: string; patch: PipelinePatch };
+
+// Optimistic update, same rationale as usePatchEntreprise() below: a status/
+// priority change is a single dropdown click and shouldn't wait on a full
+// pipeline + historique refetch before the row reflects it.
 export function useUpdatePipelineEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ companyId, patch }: { companyId: string; patch: PipelinePatch }) => {
+    mutationFn: async ({ companyId, patch }: PipelineUpdateVars) => {
       const payload: Record<string, unknown> = {};
       if (patch.statut !== undefined) payload["statut"] = patch.statut;
       if (patch.motifSansSuite !== undefined) payload["motif_sans_suite"] = patch.motifSansSuite;
@@ -60,6 +65,17 @@ export function useUpdatePipelineEntry() {
         .update(payload)
         .eq("entreprise_id", companyId);
       if (error) throw error;
+    },
+    onMutate: async ({ companyId, patch }: PipelineUpdateVars) => {
+      await queryClient.cancelQueries({ queryKey: PIPELINE_KEY });
+      const previous = queryClient.getQueryData<PipelineItem[]>(PIPELINE_KEY);
+      queryClient.setQueryData<PipelineItem[]>(PIPELINE_KEY, (data) =>
+        data?.map((p) => (p.companyId === companyId ? ({ ...p, ...patch } as PipelineItem) : p)),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(PIPELINE_KEY, context.previous);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PIPELINE_KEY }),
   });

@@ -108,22 +108,37 @@ const FIELD_TO_COLUMN = {
 
 export type PatchableField = keyof typeof FIELD_TO_COLUMN;
 
+type PatchVars = { id: string; patch: Partial<Record<PatchableField, string | boolean>> };
+
+// Optimistic update: the inline-editable admin table fires one of these per
+// keystroke-blur/select — waiting for a full 244-row refetch (with its 3
+// nested joins) before the cell reflects the change made every click feel
+// laggy. We patch the cached rows (list + any open detail view) immediately
+// and roll back only if the write actually fails.
 export function usePatchEntreprise() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id,
-      patch,
-    }: {
-      id: string;
-      patch: Partial<Record<PatchableField, string | boolean>>;
-    }) => {
+    mutationFn: async ({ id, patch }: PatchVars) => {
       const payload: Record<string, string | boolean> = {};
       for (const [field, value] of Object.entries(patch)) {
         payload[FIELD_TO_COLUMN[field as PatchableField]] = value as string | boolean;
       }
       const { error } = await supabase.from("entreprises").update(payload).eq("id", id);
       if (error) throw error;
+    },
+    onMutate: async ({ id, patch }: PatchVars) => {
+      await queryClient.cancelQueries({ queryKey: COMPANIES_KEY });
+      const previous = queryClient.getQueriesData<Company[] | Company | null>({
+        queryKey: COMPANIES_KEY,
+      });
+      const apply = (c: Company): Company => (c.id === id ? ({ ...c, ...patch } as Company) : c);
+      queryClient.setQueriesData<Company[] | Company | null>({ queryKey: COMPANIES_KEY }, (data) =>
+        Array.isArray(data) ? data.map(apply) : data && data.id === id ? apply(data) : data,
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
   });
@@ -135,6 +150,17 @@ export function useDeleteCompany() {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("entreprises").delete().eq("id", id);
       if (error) throw error;
+    },
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: COMPANIES_KEY });
+      const previous = queryClient.getQueryData<Company[]>(COMPANIES_KEY);
+      queryClient.setQueryData<Company[]>(COMPANIES_KEY, (data) =>
+        data?.filter((c) => c.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(COMPANIES_KEY, context.previous);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
