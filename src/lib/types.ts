@@ -40,6 +40,36 @@ export const SECTEUR_OPTIONS = [
   "Matériel électrique et industriel",
 ] as const;
 
+// Pays d'origine du groupe/de la maison mère — sert à distinguer une
+// entreprise marocaine d'une filiale de groupe étranger (stats). Liste
+// volontairement resserrée aux pays effectivement présents dans la base ;
+// à étendre si besoin lors de futurs ajouts.
+export const PAYS_OPTIONS = [
+  "Maroc",
+  "France",
+  "États-Unis",
+  "Allemagne",
+  "Suisse",
+  "Royaume-Uni",
+  "Espagne",
+  "Italie",
+  "Belgique",
+  "Pays-Bas",
+  "Suède",
+  "Finlande",
+  "Danemark",
+  "Japon",
+  "Chine",
+  "Corée du Sud",
+  "Émirats Arabes Unis",
+  "Arabie Saoudite",
+  "Turquie",
+  "Canada",
+  "Afrique du Sud",
+  "Grèce",
+  "Autre",
+] as const;
+
 export type Contact = {
   id: string;
   fonction: ContactFonction;
@@ -75,6 +105,7 @@ export type Company = {
   nom: string;
   groupe?: string;
   secteur?: string;
+  paysOrigine?: string;
   structureDediee: boolean | null;
   logoUrl?: string;
   // 2. Comment

@@ -7,9 +7,6 @@ import {
   ChevronRight,
   Columns3,
   FileSpreadsheet,
-  Handshake,
-  Landmark,
-  MessagesSquare,
   Pencil,
   RotateCcw,
   Search,
@@ -19,7 +16,7 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { DualScrollTable } from "@/components/DualScrollTable";
-import { PageHeader, StatCard, StatGrid } from "@/components/page-header";
+import { PageHeader } from "@/components/page-header";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -61,7 +58,7 @@ import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
 import { exportCompaniesToExcel } from "@/lib/export";
-import { SECTEUR_OPTIONS, type Company } from "@/lib/types";
+import { PAYS_OPTIONS, SECTEUR_OPTIONS, type Company } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -440,11 +437,12 @@ function EditableCell({
   );
 }
 
-const ADMIN_TABLE_COLUMN_COUNT = 18;
+const ADMIN_TABLE_COLUMN_COUNT = 19;
 
 // Colonnes secondaires masquables du tableau admin (le reste — #, entreprise,
 // groupe, secteur, statut, actions — est toujours affiché).
 const OPTIONAL_COLUMNS: { key: string; label: string }[] = [
+  { key: "pays", label: "Pays d'origine" },
   { key: "logo", label: "Logo" },
   { key: "fondation", label: "Fondation" },
   { key: "modeAcces", label: "Mode d'accès" },
@@ -594,15 +592,9 @@ function BatchDividerRow({
 }
 
 function AdminTable() {
-  const { list, filters, total } = useFiltered();
+  const { list, filters } = useFiltered();
   const { data: pipeline = [] } = usePipeline();
   const { hiddenCols, toggleCol, resetCols } = useHiddenColumns();
-  const inProgress = pipeline.filter((p) =>
-    ["premier-contact", "en-discussion", "visite-programmee", "proposition-envoyee"].includes(
-      p.statut,
-    ),
-  ).length;
-  const signed = pipeline.filter((p) => p.statut === "partenariat-signe").length;
   const { data: allProjets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
   const { data: importBatches = [] } = useImportBatches();
@@ -710,36 +702,6 @@ function AdminTable() {
         }
       />
 
-      <StatGrid>
-        <StatCard
-          label="Entreprises & fondations"
-          value={total}
-          hint={sorted.length !== total ? `${sorted.length} après filtres` : "dans la base"}
-          icon={<Building2 className="h-5 w-5" />}
-          tone="blue"
-        />
-        <StatCard
-          label="Avec fondation dédiée"
-          value={list.filter((c) => c.structureDediee).length}
-          hint="dans la sélection"
-          icon={<Landmark className="h-5 w-5" />}
-          tone="neutral"
-        />
-        <StatCard
-          label="Échanges en cours"
-          value={inProgress}
-          hint="contact, discussion, proposition"
-          icon={<MessagesSquare className="h-5 w-5" />}
-          tone="orange"
-        />
-        <StatCard
-          label="Partenariats signés"
-          value={signed}
-          icon={<Handshake className="h-5 w-5" />}
-          tone="green"
-        />
-      </StatGrid>
-
       {filters}
 
       {hiddenCols.size > 0 && (
@@ -758,6 +720,9 @@ function AdminTable() {
               {th("nom", "Entreprise")}
               {th("groupe", "Groupe")}
               {th("secteur", "Secteur")}
+              <th data-col="pays" className="px-3 py-3 text-left font-semibold">
+                Pays d'origine
+              </th>
               <th data-col="logo" className="px-3 py-3 text-left font-semibold">
                 Logo
               </th>
@@ -849,6 +814,23 @@ function AdminTable() {
                               {SECTEUR_OPTIONS.map((s) => (
                                 <SelectItem key={s} value={s}>
                                   {s}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td data-col="pays" className="px-3 py-2">
+                          <Select
+                            {...(c.paysOrigine ? { value: c.paysOrigine } : {})}
+                            onValueChange={(v) => patch(c.id, { paysOrigine: v })}
+                          >
+                            <SelectTrigger className="h-8 w-[150px] text-xs">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PAYS_OPTIONS.map((p) => (
+                                <SelectItem key={p} value={p}>
+                                  {p}
                                 </SelectItem>
                               ))}
                             </SelectContent>

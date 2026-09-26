@@ -16,6 +16,7 @@ import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
+import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
 import { Route as EntreprisesIdRouteImport } from './routes/entreprises.$id'
 import { Route as EntreprisesNouvelleRouteImport } from './routes/entreprises.nouvelle'
@@ -56,6 +57,11 @@ const ProjetsRoute = ProjetsRouteImport.update({
   path: '/projets',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableauDeBordRoute = TableauDeBordRouteImport.update({
+  id: '/tableau-de-bord',
+  path: '/tableau-de-bord',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UtilisateursRoute = UtilisateursRouteImport.update({
   id: '/utilisateurs',
   path: '/utilisateurs',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   MonCompteRoute: typeof MonCompteRoute
   PipelineRoute: typeof PipelineRoute
   ProjetsRoute: typeof ProjetsRoute
+  TableauDeBordRoute: typeof TableauDeBordRoute
   UtilisateursRoute: typeof UtilisateursRoute
   EntreprisesIdRoute: typeof EntreprisesIdRoute
   EntreprisesNouvelleRoute: typeof EntreprisesNouvelleRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjetsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableau-de-bord': {
+      id: '/tableau-de-bord'
+      path: '/tableau-de-bord'
+      fullPath: '/tableau-de-bord'
+      preLoaderRoute: typeof TableauDeBordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/utilisateurs': {
       id: '/utilisateurs'
       path: '/utilisateurs'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   MonCompteRoute: MonCompteRoute,
   PipelineRoute: PipelineRoute,
   ProjetsRoute: ProjetsRoute,
+  TableauDeBordRoute: TableauDeBordRoute,
   UtilisateursRoute: UtilisateursRoute,
   EntreprisesIdRoute: EntreprisesIdRoute,
   EntreprisesNouvelleRoute: EntreprisesNouvelleRoute,

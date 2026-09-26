@@ -41,6 +41,7 @@ export type EntrepriseRow = {
   nom: string;
   groupe: string;
   secteur: string;
+  pays_origine: string;
   structure_dediee: boolean | null;
   comment_mode_acces: string;
   comment_budget: string;
@@ -67,6 +68,7 @@ export function mapCompany(row: EntrepriseRow): Company {
     nom: row.nom,
     groupe: row.groupe,
     secteur: row.secteur,
+    paysOrigine: row.pays_origine,
     structureDediee: row.structure_dediee,
     ...(row.logo_url ? { logoUrl: row.logo_url } : {}),
     modeAcces: row.comment_mode_acces,

@@ -65,3 +65,56 @@ export function StatCard({
 export function StatGrid({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{children}</div>;
 }
+
+const BAR_TONE: Record<Tone, string> = {
+  blue: "bg-primary",
+  green: "bg-success",
+  orange: "bg-brand-orange",
+  red: "bg-destructive",
+  neutral: "bg-muted-foreground/40",
+};
+
+// Carte de répartition générique (secteur, pays d'origine, statut pipeline…) :
+// une liste d'items triés par l'appelant, chacun avec sa barre proportionnelle
+// au total — évite de dupliquer ce calcul pour chaque nouvelle statistique.
+export function DistributionCard({
+  title,
+  items,
+  emptyLabel = "Aucune donnée pour l'instant.",
+}: {
+  title: string;
+  items: { label: string; count: number; tone?: Tone }[];
+  emptyLabel?: string;
+}) {
+  const total = items.reduce((sum, i) => sum + i.count, 0);
+  return (
+    <div className="card-soft p-4 sm:p-5">
+      <h3 className="mb-3 text-sm font-semibold text-foreground">{title}</h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {items.map(({ label, count, tone = "blue" }) => {
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            return (
+              <li key={label}>
+                <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                  <span className="truncate text-foreground/85">{label}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {count} <span className="text-xs">({pct}%)</span>
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn("h-full rounded-full", BAR_TONE[tone])}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}

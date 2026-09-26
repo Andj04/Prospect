@@ -6,6 +6,7 @@ import {
   FolderKanban,
   GitBranch,
   History,
+  LayoutDashboard,
   LogOut,
   Network,
   Plus,
@@ -47,6 +48,12 @@ import logoAmalBiladi from "@/assets/logo-amal-biladi.png";
 type NavEntry = { to: string; label: string; icon: typeof Building2; group: string };
 
 const PROSPECTION_NAV: NavEntry[] = [
+  {
+    to: "/tableau-de-bord",
+    label: "Tableau de bord",
+    icon: LayoutDashboard,
+    group: "Prospection",
+  },
   { to: "/", label: "Entreprises", icon: Building2, group: "Prospection" },
   { to: "/pipeline", label: "Pipeline", icon: GitBranch, group: "Prospection" },
   { to: "/cartographie", label: "Cartographie", icon: Network, group: "Prospection" },

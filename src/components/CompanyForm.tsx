@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   CONTACT_FONCTIONS,
+  PAYS_OPTIONS,
   SECTEUR_OPTIONS,
   type Company,
   type Contact,
@@ -28,6 +29,7 @@ export const emptyCompany: Omit<Company, "id"> = {
   nom: "",
   groupe: "",
   secteur: "",
+  paysOrigine: "",
   structureDediee: null,
   logoUrl: "",
   modeAcces: "",
@@ -172,6 +174,24 @@ export function CompanyForm({
                 {SECTEUR_OPTIONS.map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pays-origine">Pays d'origine (groupe / maison mère)</Label>
+            <Select
+              {...(value.paysOrigine ? { value: value.paysOrigine } : {})}
+              onValueChange={(v) => set("paysOrigine", v)}
+            >
+              <SelectTrigger id="pays-origine">
+                <SelectValue placeholder="Choisir un pays…" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYS_OPTIONS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
                   </SelectItem>
                 ))}
               </SelectContent>
