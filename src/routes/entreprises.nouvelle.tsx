@@ -48,7 +48,7 @@ function NouvelleEntreprise() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-6">
-        <BackButton fallbackTo="/" label="Retour" />
+        <BackButton fallbackTo="/entreprises" label="Retour" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Ajouter une entreprise</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -61,7 +61,7 @@ function NouvelleEntreprise() {
           projets={projets}
           sousComposantes={sousComposantes}
           submitLabel="Enregistrer l'entreprise"
-          onCancel={() => navigate({ to: "/" })}
+          onCancel={() => navigate({ to: "/entreprises" })}
           onSubmit={() => {
             saveCompany.mutate(
               { id: null, company: draft },

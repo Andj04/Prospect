@@ -18,6 +18,7 @@ import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
+import { Route as EntreprisesIndexRouteImport } from './routes/entreprises.index'
 import { Route as EntreprisesIdRouteImport } from './routes/entreprises.$id'
 import { Route as EntreprisesNouvelleRouteImport } from './routes/entreprises.nouvelle'
 import { Route as EntreprisesIdModifierRouteImport } from './routes/entreprises.$id_.modifier'
@@ -67,6 +68,11 @@ const UtilisateursRoute = UtilisateursRouteImport.update({
   path: '/utilisateurs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntreprisesIndexRoute = EntreprisesIndexRouteImport.update({
+  id: '/entreprises/',
+  path: '/entreprises/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntreprisesIdRoute = EntreprisesIdRouteImport.update({
   id: '/entreprises/$id',
   path: '/entreprises/$id',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/entreprises/': typeof EntreprisesIndexRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/entreprises': typeof EntreprisesIndexRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/entreprises/': typeof EntreprisesIndexRoute
   '/entreprises/$id_/modifier': typeof EntreprisesIdModifierRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/entreprises/'
     | '/entreprises/$id/modifier'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/entreprises'
     | '/entreprises/$id/modifier'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/entreprises/'
     | '/entreprises/$id_/modifier'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   UtilisateursRoute: typeof UtilisateursRoute
   EntreprisesIdRoute: typeof EntreprisesIdRoute
   EntreprisesNouvelleRoute: typeof EntreprisesNouvelleRoute
+  EntreprisesIndexRoute: typeof EntreprisesIndexRoute
   EntreprisesIdModifierRoute: typeof EntreprisesIdModifierRoute
 }
 
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UtilisateursRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entreprises/': {
+      id: '/entreprises/'
+      path: '/entreprises'
+      fullPath: '/entreprises/'
+      preLoaderRoute: typeof EntreprisesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entreprises/$id': {
       id: '/entreprises/$id'
       path: '/entreprises/$id'
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   UtilisateursRoute: UtilisateursRoute,
   EntreprisesIdRoute: EntreprisesIdRoute,
   EntreprisesNouvelleRoute: EntreprisesNouvelleRoute,
+  EntreprisesIndexRoute: EntreprisesIndexRoute,
   EntreprisesIdModifierRoute: EntreprisesIdModifierRoute,
 }
 export const routeTree = rootRouteImport

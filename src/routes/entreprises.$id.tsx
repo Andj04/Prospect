@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Download, Linkedin, Mail, Pencil, Phone, X } from "lucide-react";
+import { Download, Globe2, Landmark, Linkedin, Mail, Pencil, Phone, Star, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BackButton } from "@/components/BackButton";
 import { PrioriteBadge, ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
@@ -10,6 +10,9 @@ import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects } from "@/lib/queries/projects";
 import { CONTACT_FONCTIONS } from "@/lib/types";
 import { exportCompanyToPdf } from "@/lib/export";
+import { REQUIRED_CHECKS, missingRequired } from "@/lib/completeness";
+import { useFavorites } from "@/lib/preferences";
+import { cn } from "@/lib/utils";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
 
 export const Route = createFileRoute("/entreprises/$id")({
@@ -59,7 +62,8 @@ function Block({ n, title, children }: { n: number; title: string; children: Rea
 
 function FicheEntreprise() {
   const { id } = Route.useParams();
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
+  const { isFavorite, toggle: toggleFavorite } = useFavorites(profile?.id);
   const { data: c, isLoading } = useCompany(id);
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useAllProjects();
@@ -92,16 +96,68 @@ function FicheEntreprise() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5">
-        <BackButton fallbackTo="/" label="Retour" />
+        <BackButton fallbackTo="/entreprises" label="Retour" />
 
         <div className="card-soft overflow-hidden">
           <div className="brand-gradient h-1.5 w-full" />
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 p-5 sm:p-6">
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight">{c.nom}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {[c.groupe, c.secteur].filter(Boolean).join(" · ") || "—"}
-              </p>
+              <div className="flex items-start gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-balance">{c.nom}</h1>
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(c.id)}
+                  aria-label={isFavorite(c.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  title={isFavorite(c.id) ? "Retirer des favoris" : "Épingler dans le menu"}
+                  className="mt-1 rounded-md p-1 text-muted-foreground transition-all hover:scale-110 hover:text-brand-orange active:scale-95"
+                >
+                  <Star
+                    className={cn(
+                      "h-5 w-5 transition-colors",
+                      isFavorite(c.id) && "fill-brand-orange text-brand-orange",
+                    )}
+                  />
+                </button>
+              </div>
+              {c.groupe && <p className="mt-1 text-sm text-muted-foreground">{c.groupe}</p>}
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {c.secteur && (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary-deep dark:text-primary">
+                    {c.secteur}
+                  </span>
+                )}
+                {c.paysOrigine && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                    <Globe2 className="h-3 w-3" />
+                    {c.paysOrigine}
+                  </span>
+                )}
+                {c.structureDediee && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
+                    <Landmark className="h-3 w-3" />
+                    Fondation dédiée
+                  </span>
+                )}
+                {(() => {
+                  const miss = missingRequired(c);
+                  const done = REQUIRED_CHECKS.length - miss.length;
+                  return (
+                    <span
+                      title={miss.length ? `À compléter : ${miss.join(", ")}` : "Fiche complète"}
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums",
+                        miss.length === 0
+                          ? "bg-success/15 text-success"
+                          : miss.length <= 3
+                            ? "bg-brand-orange/20 text-warning-foreground"
+                            : "bg-destructive/10 text-destructive",
+                      )}
+                    >
+                      Fiche {done}/{REQUIRED_CHECKS.length}
+                    </span>
+                  );
+                })()}
+              </div>
               {c.exclue && (
                 <p className="mt-3 inline-flex items-start gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   <X className="mt-0.5 h-4 w-4 shrink-0" />
@@ -135,6 +191,7 @@ function FicheEntreprise() {
             <Field label="Nom" value={c.nom} />
             <Field label="Groupe / maison mère" value={c.groupe} />
             <Field label="Secteur d'activité" value={c.secteur} />
+            <Field label="Pays d'origine" value={c.paysOrigine} />
             <Field
               label="Structure dédiée"
               value={

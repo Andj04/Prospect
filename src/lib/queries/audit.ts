@@ -4,9 +4,10 @@ import { mapAuditLogEntry, type AuditLogRow } from "@/lib/mappers";
 import type { AuditLogEntry } from "@/lib/types";
 import { AUDIT_LOG_KEY } from "./keys";
 
-export function useAuditLog() {
+export function useAuditLog(enabled = true) {
   return useQuery({
     queryKey: AUDIT_LOG_KEY,
+    enabled,
     queryFn: async (): Promise<AuditLogEntry[]> => {
       const { data, error } = await supabase
         .from("audit_log")
