@@ -439,6 +439,7 @@ function AccueilPage() {
                 <Link
                   key={projet.id}
                   to="/cartographie"
+                  search={{ vue: "projets", projet: projet.id }}
                   className="group flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
                 >
                   <span

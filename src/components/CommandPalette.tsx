@@ -111,7 +111,14 @@ export function CommandPalette({
         <CommandSeparator />
         <CommandGroup heading="Projets Amal Biladi">
           {projets.map((p) => (
-            <CommandItem key={p.id} value={`projet ${p.nom}`} onSelect={() => go("/cartographie")}>
+            <CommandItem
+              key={p.id}
+              value={`projet ${p.nom}`}
+              onSelect={() => {
+                onOpenChange(false);
+                void navigate({ to: "/cartographie", search: { vue: "projets", projet: p.id } });
+              }}
+            >
               <FolderKanban className="h-4 w-4 text-muted-foreground" />
               {p.nom}
             </CommandItem>
