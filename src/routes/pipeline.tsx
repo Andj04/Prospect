@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { daysSince, formatMAD, isInactive, isOverdue, weightedAmount } from "@/lib/pipeline-utils";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList, useCompany } from "@/lib/queries/companies";
 import { useMoveStatut, usePipeline } from "@/lib/queries/pipeline";
 import { useProjects } from "@/lib/queries/projects";
 import { useUsers } from "@/lib/queries/users";
@@ -164,7 +164,7 @@ function DossierCard({
 
 function PipelinePage() {
   const { isAdmin, profile } = useAuth();
-  const { data: companies = [] } = useCompanies();
+  const { data: companies = [] } = useCompaniesList();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
   const { data: users = [] } = useUsers();
@@ -254,7 +254,9 @@ function PipelinePage() {
   };
 
   const current = openId ? pipeline.find((p) => p.companyId === openId) : undefined;
-  const currentCompany = openId ? companyById.get(openId) : undefined;
+  // Fiche complète du dossier ouvert : l'email de prospection et les
+  // sous-composantes en ont besoin, la liste allégée ne suffit pas.
+  const { data: currentCompany } = useCompany(openId ?? undefined);
   const filtersActive = q.trim() !== "" || prio !== ALL || resp !== ALL || projet !== ALL;
 
   const th = (key: SortKey, label: string) => (

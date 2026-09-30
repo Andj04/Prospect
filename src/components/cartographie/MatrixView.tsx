@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Check } from "lucide-react";
 import { getProjectColor } from "@/lib/graph-colors";
-import type { Company, Projet } from "@/lib/types";
+import type { CompanyListItem, Projet } from "@/lib/types";
 
 // Vue tableau : une ligne par entreprise, une colonne par projet.
 export function MatrixView({
@@ -9,7 +9,7 @@ export function MatrixView({
   projets,
   onOpen,
 }: {
-  companies: Company[];
+  companies: CompanyListItem[];
   projets: Projet[];
   onOpen: (id: string) => void;
 }) {

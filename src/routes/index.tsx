@@ -20,10 +20,10 @@ import { reveal } from "@/lib/reveal";
 import { StatutBadge } from "@/components/badges";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ACTION_CLASS, ACTION_LABEL, describeEntry } from "@/lib/audit-format";
-import { REQUIRED_CHECKS, missingRequired } from "@/lib/completeness";
+import { REQUIRED_CHECKS_LIST, missingRequiredList } from "@/lib/completeness";
 import { getProjectColor } from "@/lib/graph-colors";
 import { useAuditLog } from "@/lib/queries/audit";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useProjects } from "@/lib/queries/projects";
 import { cn } from "@/lib/utils";
@@ -91,14 +91,14 @@ function Panel({
 function AccueilPage() {
   const { profile, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const { data: companies = [], isLoading } = useCompanies();
+  const { data: companies = [], isLoading } = useCompaniesList();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
   const { data: audit = [] } = useAuditLog(isAdmin);
 
   const stats = useMemo(() => {
-    const complete = companies.filter((c) => missingRequired(c).length === 0).length;
-    const contacts = companies.reduce((s, c) => s + c.contacts.length, 0);
+    const complete = companies.filter((c) => missingRequiredList(c).length === 0).length;
+    const contacts = companies.reduce((s, c) => s + c.nbContacts, 0);
     const enCours = pipeline.filter((p) =>
       ["premier-contact", "en-discussion", "visite-programmee", "proposition-envoyee"].includes(
         p.statut,
@@ -111,7 +111,7 @@ function AccueilPage() {
     () =>
       companies
         .filter((c) => !c.exclue)
-        .map((c) => ({ company: c, missing: missingRequired(c) }))
+        .map((c) => ({ company: c, missing: missingRequiredList(c) }))
         .filter((r) => r.missing.length > 0)
         .sort((a, b) => b.missing.length - a.missing.length)
         .slice(0, 6),
@@ -327,7 +327,8 @@ function AccueilPage() {
                         className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary"
                       >
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-destructive/10 text-xs font-bold tabular-nums text-destructive">
-                          {REQUIRED_CHECKS.length - missing.length}/{REQUIRED_CHECKS.length}
+                          {REQUIRED_CHECKS_LIST.length - missing.length}/
+                          {REQUIRED_CHECKS_LIST.length}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">{company.nom}</span>

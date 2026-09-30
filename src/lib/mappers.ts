@@ -3,6 +3,7 @@ import type {
   AuditLogEntry,
   AuditTable,
   Company,
+  CompanyListItem,
   Contact,
   ContactFonction,
   HistoriqueEntry,
@@ -87,6 +88,62 @@ export function mapCompany(row: EntrepriseRow): Company {
     exclue: row.exclue,
     raisonExclusion: row.raison_exclusion,
     ...(row.import_batch_id ? { importBatchId: row.import_batch_id } : {}),
+  };
+}
+
+export type EntrepriseListeRow = {
+  id: string;
+  nom: string;
+  groupe: string;
+  secteur: string;
+  pays_origine: string;
+  structure_dediee: boolean | null;
+  logo_url: string | null;
+  exclue: boolean;
+  raison_exclusion: string;
+  import_batch_id: string | null;
+  comment_type_engagement: string;
+  a_mode_acces: boolean;
+  a_budget: boolean;
+  a_descriptif: boolean;
+  a_programmes: boolean;
+  a_notes: boolean;
+  a_alignement: boolean;
+  a_precedent: boolean;
+  a_proposition: boolean;
+  nb_contacts: number;
+  projet_ids: string[] | null;
+  sous_composante_ids: string[] | null;
+  recherche: string | null;
+};
+
+export function mapCompanyListItem(row: EntrepriseListeRow): CompanyListItem {
+  return {
+    id: row.id,
+    nom: row.nom,
+    groupe: row.groupe,
+    secteur: row.secteur,
+    paysOrigine: row.pays_origine,
+    structureDediee: row.structure_dediee,
+    ...(row.logo_url ? { logoUrl: row.logo_url } : {}),
+    exclue: row.exclue,
+    raisonExclusion: row.raison_exclusion,
+    ...(row.import_batch_id ? { importBatchId: row.import_batch_id } : {}),
+    typeEngagement: (row.comment_type_engagement as CompanyListItem["typeEngagement"]) || "",
+    nbContacts: Number(row.nb_contacts ?? 0),
+    projets: row.projet_ids ?? [],
+    sousComposantes: row.sous_composante_ids ?? [],
+    recherche: row.recherche ?? "",
+    a: {
+      modeAcces: row.a_mode_acces,
+      budget: row.a_budget,
+      descriptif: row.a_descriptif,
+      programmes: row.a_programmes,
+      notes: row.a_notes,
+      alignement: row.a_alignement,
+      precedent: row.a_precedent,
+      proposition: row.a_proposition,
+    },
   };
 }
 

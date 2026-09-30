@@ -45,12 +45,13 @@ export function ExportDialog({
   filtered?: Company[];
   trigger?: React.ReactNode;
 }) {
-  const { data: companies = [] } = useCompanies();
+  const [open, setOpen] = useState(false);
+  // Les fiches complètes (1 Mo) ne sont chargées qu'à l'ouverture de la fenêtre.
+  const { data: companies = [], isLoading } = useCompanies(open);
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
 
-  const [open, setOpen] = useState(false);
   const [scope, setScope] = useState<Scope>(filtered ? "filtered" : "all");
   const [projet, setProjet] = useState(ALL);
   const [secteur, setSecteur] = useState(ALL);
@@ -313,13 +314,15 @@ export function ExportDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Annuler
           </Button>
-          <Button onClick={run} disabled={busy || selection.length === 0}>
-            {busy ? (
+          <Button onClick={run} disabled={busy || isLoading || selection.length === 0}>
+            {busy || isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <FileSpreadsheet className="h-4 w-4" />
             )}
-            Exporter {selection.length} entreprise{selection.length > 1 ? "s" : ""}
+            {isLoading
+              ? "Chargement des fiches…"
+              : `Exporter ${selection.length} entreprise${selection.length > 1 ? "s" : ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,9 @@
-import type { Company } from "@/lib/types";
+import type { Company, CompanyListItem } from "@/lib/types";
 
 export type FieldCheck = { key: string; label: string; test: (c: Company) => boolean };
+
+/** Même contrôle, à partir de la liste allégée (indicateurs de présence). */
+export type ListFieldCheck = { key: string; label: string; test: (c: CompanyListItem) => boolean };
 
 const filled = (v: string | undefined | null) => !!v && v.trim() !== "";
 
@@ -55,6 +58,44 @@ export const BONUS_CHECKS: FieldCheck[] = [
   { key: "notes", label: "Notes complémentaires", test: (c) => filled(c.notesComplementaires) },
   { key: "logo", label: "Logo", test: (c) => filled(c.logoUrl) },
 ];
+
+// Version « liste » des mêmes règles : les champs longs sont évalués via les
+// indicateurs de présence renvoyés par la vue, pas via leur contenu.
+export const REQUIRED_CHECKS_LIST: ListFieldCheck[] = [
+  { key: "nom", label: "Nom de l'entreprise", test: (c) => filled(c.nom) },
+  { key: "paysOrigine", label: "Pays d'origine", test: (c) => filled(c.paysOrigine) },
+  { key: "secteur", label: "Secteur d'activité", test: (c) => filled(c.secteur) },
+  { key: "modeAcces", label: "Mode d'accès au financement", test: (c) => c.a.modeAcces },
+  { key: "descriptif", label: "Descriptif des activités", test: (c) => c.a.descriptif },
+  { key: "programmes", label: "Programmes ou projets déjà financés", test: (c) => c.a.programmes },
+  { key: "alignement", label: "Alignement thématique", test: (c) => c.a.alignement },
+  { key: "contacts", label: "Contacts", test: (c) => c.nbContacts > 0 },
+  { key: "projets", label: "Projets Amal Biladi liés", test: (c) => c.projets.length > 0 },
+  {
+    key: "sousComposantes",
+    label: "Sous-composantes liées",
+    test: (c) => c.sousComposantes.length > 0,
+  },
+];
+
+export const BONUS_CHECKS_LIST: ListFieldCheck[] = [
+  { key: "groupe", label: "Groupe / maison mère", test: (c) => filled(c.groupe) },
+  { key: "budgetRSE", label: "Budget RSE", test: (c) => c.a.budget },
+  { key: "typeEngagement", label: "Type d'engagement", test: (c) => filled(c.typeEngagement) },
+  {
+    key: "structureDediee",
+    label: "Structure dédiée (oui/non renseigné)",
+    test: (c) => c.structureDediee !== null && c.structureDediee !== undefined,
+  },
+  { key: "precedentFort", label: "Précédent le plus fort", test: (c) => c.a.precedent },
+  { key: "propositionConcrete", label: "Proposition concrète", test: (c) => c.a.proposition },
+  { key: "notes", label: "Notes complémentaires", test: (c) => c.a.notes },
+  { key: "logo", label: "Logo", test: (c) => filled(c.logoUrl) },
+];
+
+export function missingRequiredList(c: CompanyListItem): string[] {
+  return REQUIRED_CHECKS_LIST.filter((f) => !f.test(c)).map((f) => f.label);
+}
 
 export function missingRequired(c: Company): string[] {
   return REQUIRED_CHECKS.filter((f) => !f.test(c)).map((f) => f.label);

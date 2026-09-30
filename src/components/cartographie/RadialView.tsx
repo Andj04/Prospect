@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getProjectColor } from "@/lib/graph-colors";
-import type { Company, Projet, SousComposante } from "@/lib/types";
+import type { CompanyListItem, Projet, SousComposante } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // Arbre radial d'un projet : le projet au centre, ses sous-composantes sur un
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const R1 = 175;
 
-type Leaf = { company: Company; angle: number; branch: string };
+type Leaf = { company: CompanyListItem; angle: number; branch: string };
 type Branch = { key: string; label: string; angle: number; count: number };
 
 export function RadialView({
@@ -22,7 +22,7 @@ export function RadialView({
   onProjetChange,
   onOpen,
 }: {
-  companies: Company[];
+  companies: CompanyListItem[];
   projets: Projet[];
   sousComposantes: SousComposante[];
   projetId: string | undefined;

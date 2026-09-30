@@ -6,6 +6,7 @@ import { COMPANIES_KEY, IMPORT_BATCHES_KEY } from "./keys";
 
 export function useImportBatches() {
   return useQuery({
+    staleTime: 10 * 60_000,
     queryKey: IMPORT_BATCHES_KEY,
     queryFn: async (): Promise<ImportBatch[]> => {
       const { data, error } = await supabase.from("import_batches").select("*").order("created_at");

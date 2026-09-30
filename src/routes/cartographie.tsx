@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList } from "@/lib/queries/companies";
 import { useProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
 
@@ -89,7 +89,7 @@ function CartographiePage() {
   const navigate = useNavigate({ from: "/cartographie" });
   const view: View = search.vue ?? "projets";
 
-  const { data: allCompanies = [] } = useCompanies();
+  const { data: allCompanies = [] } = useCompaniesList();
   const { data: projets = [] } = useProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
 

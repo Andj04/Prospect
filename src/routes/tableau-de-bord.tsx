@@ -28,8 +28,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BONUS_CHECKS, REQUIRED_CHECKS } from "@/lib/completeness";
-import { useCompanies } from "@/lib/queries/companies";
+import { BONUS_CHECKS_LIST, REQUIRED_CHECKS_LIST } from "@/lib/completeness";
+import { useCompaniesList } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useProjects } from "@/lib/queries/projects";
 import { STATUTS, type PipelineStatut, type Priorite } from "@/lib/types";
@@ -95,7 +95,7 @@ function TableauDeBordPage() {
   const initial: Onglet = hash === "qualite" || hash === "pipeline" ? hash : "vue";
   const [onglet, setOnglet] = useState<Onglet>(initial);
 
-  const { data: companies = [] } = useCompanies();
+  const { data: companies = [] } = useCompaniesList();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
 
@@ -111,8 +111,8 @@ function TableauDeBordPage() {
       etrangeres,
       inconnu: total - marocaines - etrangeres,
       fondations: companies.filter((c) => c.structureDediee).length,
-      contacts: companies.reduce((s, c) => s + c.contacts.length, 0),
-      couvertes: companies.filter((c) => c.contacts.length > 0).length,
+      contacts: companies.reduce((s, c) => s + c.nbContacts, 0),
+      couvertes: companies.filter((c) => c.nbContacts > 0).length,
       avecProjet: companies.filter((c) => c.projets.length > 0).length,
       secteurs: countBy(companies, (c) => c.secteur || "Non renseigné"),
       pays: countBy(
@@ -136,8 +136,8 @@ function TableauDeBordPage() {
   const quality = useMemo(() => {
     const rows = companies.map((c) => ({
       company: c,
-      missingRequired: REQUIRED_CHECKS.filter((f) => !f.test(c)).map((f) => f.label),
-      missingBonus: BONUS_CHECKS.filter((f) => !f.test(c)).map((f) => f.label),
+      missingRequired: REQUIRED_CHECKS_LIST.filter((f) => !f.test(c)).map((f) => f.label),
+      missingBonus: BONUS_CHECKS_LIST.filter((f) => !f.test(c)).map((f) => f.label),
     }));
     const complete = rows.filter((r) => r.missingRequired.length === 0).length;
     const sumReq = rows.reduce((s, r) => s + r.missingRequired.length, 0);
@@ -145,15 +145,15 @@ function TableauDeBordPage() {
     return {
       complete,
       heavy: rows.filter((r) => r.missingRequired.length >= 5).length,
-      avgRequired: total ? REQUIRED_CHECKS.length - sumReq / total : 0,
-      avgBonus: total ? BONUS_CHECKS.length - sumBonus / total : 0,
-      requiredItems: REQUIRED_CHECKS.map((f) => {
+      avgRequired: total ? REQUIRED_CHECKS_LIST.length - sumReq / total : 0,
+      avgBonus: total ? BONUS_CHECKS_LIST.length - sumBonus / total : 0,
+      requiredItems: REQUIRED_CHECKS_LIST.map((f) => {
         const count = rows.filter((r) => r.missingRequired.includes(f.label)).length;
         return { label: f.label, count, tone: severityTone(count, total) };
       })
         .filter((i) => i.count > 0)
         .sort((a, b) => b.count - a.count),
-      bonusItems: BONUS_CHECKS.map((f) => ({
+      bonusItems: BONUS_CHECKS_LIST.map((f) => ({
         label: f.label,
         count: rows.filter((r) => r.missingBonus.includes(f.label)).length,
         tone: "neutral" as Tone,
@@ -424,8 +424,8 @@ function TableauDeBordPage() {
               <StatCard
                 index={3}
                 label="Champs requis remplis en moyenne"
-                value={`${quality.avgRequired.toFixed(1)} / ${REQUIRED_CHECKS.length}`}
-                hint={`bonus : ${quality.avgBonus.toFixed(1)} / ${BONUS_CHECKS.length}`}
+                value={`${quality.avgRequired.toFixed(1)} / ${REQUIRED_CHECKS_LIST.length}`}
+                hint={`bonus : ${quality.avgBonus.toFixed(1)} / ${BONUS_CHECKS_LIST.length}`}
                 icon={<Gauge className="h-5 w-5" />}
                 tone="blue"
               />
@@ -483,7 +483,8 @@ function TableauDeBordPage() {
                       className="flex flex-wrap items-start gap-x-3 gap-y-1 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-secondary"
                     >
                       <span className="w-10 shrink-0 pt-0.5 text-right text-xs font-bold tabular-nums text-destructive">
-                        {REQUIRED_CHECKS.length - missingRequired.length}/{REQUIRED_CHECKS.length}
+                        {REQUIRED_CHECKS_LIST.length - missingRequired.length}/
+                        {REQUIRED_CHECKS_LIST.length}
                       </span>
                       <span className="min-w-[160px] shrink-0 font-medium">{company.nom}</span>
                       <span className="flex flex-1 flex-wrap gap-1">

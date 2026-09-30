@@ -26,6 +26,7 @@ function mapUser(row: ProfileRow): AppUser {
 
 export function useUsers() {
   return useQuery({
+    staleTime: 10 * 60_000,
     queryKey: USERS_KEY,
     queryFn: async (): Promise<AppUser[]> => {
       const { data, error } = await supabase

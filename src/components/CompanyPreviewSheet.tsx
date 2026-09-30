@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { StatutBadge } from "@/components/badges";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -28,7 +29,7 @@ import { REQUIRED_CHECKS, missingRequired } from "@/lib/completeness";
 import { exportCompanyToPdf } from "@/lib/export";
 import { getProjectColor } from "@/lib/graph-colors";
 import { useFavorites } from "@/lib/preferences";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompany } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
@@ -44,7 +45,15 @@ function initials(nom: string) {
     .join("");
 }
 
-export function CompanyAvatar({ company, size = 44 }: { company: Company; size?: number }) {
+// N'a besoin que du nom et du logo : accepte aussi bien une fiche complète
+// qu'une entrée de la liste allégée.
+export function CompanyAvatar({
+  company,
+  size = 44,
+}: {
+  company: Pick<Company, "nom"> & { logoUrl?: string | undefined };
+  size?: number;
+}) {
   const [imgError, setImgError] = useState(false);
   const style = { width: size, height: size };
   return company.logoUrl && !imgError ? (
@@ -112,11 +121,12 @@ export function CompanyPreviewSheet({
 }) {
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.id);
-  const { data: companies = [] } = useCompanies();
+  // Fiche complète chargée à l'ouverture seulement (≈0,1 s), au lieu de garder
+  // les 304 fiches en mémoire sur chaque page.
+  const { data: company, isLoading } = useCompany(companyId ?? undefined);
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
-  const company = companies.find((c) => c.id === companyId);
   const pl = pipeline.find((p) => p.companyId === companyId);
 
   const miss = company ? missingRequired(company) : [];
@@ -125,6 +135,14 @@ export function CompanyPreviewSheet({
   return (
     <Sheet open={Boolean(companyId)} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        {isLoading && !company && (
+          <div className="space-y-3 p-6">
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        )}
         {company && (
           <>
             <SheetHeader className="space-y-3">

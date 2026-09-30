@@ -4,20 +4,24 @@ import { supabase } from "@/lib/supabase-client";
 import {
   AUDIT_LOG_KEY,
   COMPANIES_KEY,
+  COMPANIES_LIST_KEY,
+  CONTACTS_KEY,
   DOCUMENTS_KEY,
   PIPELINE_KEY,
   PROJETS_KEY,
   USERS_KEY,
 } from "@/lib/queries/keys";
 
-// Maps each replicated table to the query keys that need invalidating when it
-// changes, so any admin's edit is reflected live for every connected user —
-// requires the tables to be added to the supabase_realtime publication
-// (see supabase/migrations/0004_realtime.sql).
+// Chaque table répliquée déclenche l'invalidation des requêtes concernées, pour
+// que la modification d'un utilisateur soit visible en direct chez les autres —
+// suppose que les tables soient dans la publication supabase_realtime
+// (voir supabase/migrations/0004_realtime.sql).
+const COMPANY_KEYS: QueryKey[] = [COMPANIES_KEY, COMPANIES_LIST_KEY];
+
 const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
-  entreprises: [COMPANIES_KEY],
-  entreprise_contacts: [COMPANIES_KEY],
-  entreprise_projets: [COMPANIES_KEY],
+  entreprises: COMPANY_KEYS,
+  entreprise_contacts: [...COMPANY_KEYS, CONTACTS_KEY],
+  entreprise_projets: COMPANY_KEYS,
   pipeline: [PIPELINE_KEY],
   pipeline_historique: [PIPELINE_KEY],
   pipeline_documents: [DOCUMENTS_KEY],
@@ -26,23 +30,44 @@ const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
   audit_log: [AUDIT_LOG_KEY],
 };
 
+// Enregistrer une fiche écrit dans plusieurs tables à la suite (entreprise,
+// contacts, liens projets) : sans regroupement, chaque écriture relancerait son
+// propre rechargement. On attend donc un court instant que la rafale se termine
+// avant de recharger une seule fois.
+const DEBOUNCE_MS = 350;
+
 export function useRealtimeSync(enabled: boolean) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!enabled) return;
 
+    const pending = new Map<string, QueryKey>();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const flush = () => {
+      timer = undefined;
+      const keys = [...pending.values()];
+      pending.clear();
+      for (const key of keys) void queryClient.invalidateQueries({ queryKey: key });
+    };
+
+    const schedule = (keys: QueryKey[]) => {
+      for (const key of keys) pending.set(JSON.stringify(key), key);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(flush, DEBOUNCE_MS);
+    };
+
     const channel = supabase.channel("db-changes");
     for (const table of Object.keys(TABLE_TO_KEYS)) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
-        for (const key of TABLE_TO_KEYS[table] ?? []) {
-          void queryClient.invalidateQueries({ queryKey: key });
-        }
+        schedule(TABLE_TO_KEYS[table] ?? []);
       });
     }
     channel.subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       void supabase.removeChannel(channel);
     };
   }, [enabled, queryClient]);

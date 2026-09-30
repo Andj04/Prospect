@@ -25,9 +25,8 @@ import {
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRealtimeSync } from "@/lib/realtime";
 import { useFavorites, useTheme, type ThemeChoice } from "@/lib/preferences";
-import { useCompanies } from "@/lib/queries/companies";
-import { usePipeline } from "@/lib/queries/pipeline";
-import { isOverdue } from "@/lib/pipeline-utils";
+import { useCompaniesByIds } from "@/lib/queries/companies";
+import { useOverdueCount } from "@/lib/queries/pipeline";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -155,15 +154,10 @@ function NavGroup({
 function FavoritesGroup({ pathname }: { pathname: string }) {
   const { profile } = useAuth();
   const { favorites } = useFavorites(profile?.id);
-  const { data: companies = [] } = useCompanies();
+  // Requête ciblée sur les seules fiches épinglées : la barre latérale est
+  // présente sur toutes les pages, elle ne doit rien charger de plus.
+  const { data: items = [] } = useCompaniesByIds(favorites);
   const { isMobile, setOpenMobile } = useSidebar();
-  const items = useMemo(
-    () =>
-      favorites
-        .map((id) => companies.find((c) => c.id === id))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c)),
-    [favorites, companies],
-  );
   if (items.length === 0) return null;
   return (
     <SidebarGroup className="py-1">
@@ -287,8 +281,7 @@ function UserMenu() {
 
 function AppSidebar({ pathname }: { pathname: string }) {
   const { isAdmin } = useAuth();
-  const { data: pipeline = [] } = usePipeline();
-  const overdue = pipeline.filter((p) => isOverdue(p)).length;
+  const { data: overdue = 0 } = useOverdueCount();
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="px-3 pb-2 pt-4">

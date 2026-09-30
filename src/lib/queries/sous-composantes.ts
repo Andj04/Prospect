@@ -6,6 +6,7 @@ import { COMPANIES_KEY, SOUS_COMPOSANTES_KEY } from "./keys";
 
 export function useSousComposantes() {
   return useQuery({
+    staleTime: 10 * 60_000,
     queryKey: SOUS_COMPOSANTES_KEY,
     queryFn: async (): Promise<SousComposante[]> => {
       const { data, error } = await supabase.from("sous_composantes").select("*").order("ordre");

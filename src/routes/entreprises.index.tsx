@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useDebounced } from "@/hooks/use-debounced";
 import {
   ArrowUpDown,
   Building2,
@@ -136,6 +137,40 @@ function useFiltered() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/entreprises/" });
   const [q, setQ] = useState("");
+  // La frappe reste fluide : on ne refiltre qu'une fois la saisie terminée.
+  const query = useDebounced(q, 200);
+
+  // Index de recherche préparé une fois par fiche, au lieu de reconstruire le
+  // texte de chaque fiche à chaque caractère tapé.
+  const index = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of companies) {
+      m.set(
+        c.id,
+        [
+          c.nom,
+          c.groupe,
+          c.secteur,
+          c.paysOrigine,
+          c.budgetRSE,
+          c.modeAcces,
+          c.alignementThematique,
+          c.precedentFort,
+          c.propositionConcrete,
+          c.descriptifActivites,
+          c.programmes,
+          c.projetsFinances,
+          c.notesComplementaires,
+          c.raisonExclusion,
+          ...c.contacts.map((ct) => `${ct.nom} ${ct.email ?? ""} ${ct.telephone ?? ""}`),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase(),
+      );
+    }
+    return m;
+  }, [companies]);
 
   const vue: Vue = search.vue ?? "toutes";
   const projet = search.projet ?? ALL;
@@ -166,13 +201,10 @@ function useFiltered() {
   );
 
   const list = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = query.trim().toLowerCase();
     const manqueCheck = manque ? REQUIRED_CHECKS.find((f) => f.label === manque) : undefined;
     return companies.filter((c) => {
-      if (needle) {
-        const hay = JSON.stringify(c).toLowerCase();
-        if (!hay.includes(needle)) return false;
-      }
+      if (needle && !(index.get(c.id) ?? "").includes(needle)) return false;
       if (projet !== ALL && !c.projets.includes(projet)) return false;
       if (secteur !== ALL && (c.secteur || "Non renseigné") !== secteur) return false;
       if (pays !== ALL && (c.paysOrigine || "Non renseigné") !== pays) return false;
@@ -183,7 +215,7 @@ function useFiltered() {
       if (vue === "favoris" && !favorites.includes(c.id)) return false;
       return true;
     });
-  }, [companies, q, projet, secteur, pays, manque, vue, favorites]);
+  }, [companies, query, index, projet, secteur, pays, manque, vue, favorites]);
 
   const activeFilters = [
     q.trim() !== "",

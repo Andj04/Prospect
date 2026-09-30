@@ -47,7 +47,7 @@ import {
   todayIso,
   type RelanceBucket,
 } from "@/lib/pipeline-utils";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList, useCompany } from "@/lib/queries/companies";
 import { useAddHistorique, usePipeline } from "@/lib/queries/pipeline";
 import { reveal } from "@/lib/reveal";
 import { TYPES_ECHANGE, type PipelineItem } from "@/lib/types";
@@ -194,7 +194,7 @@ function DoneDialog({
 function RelancesPage() {
   const { isAdmin, profile } = useAuth();
   const { data: pipeline = [] } = usePipeline();
-  const { data: companies = [] } = useCompanies();
+  const { data: companies = [] } = useCompaniesList();
   const [mine, setMine] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -233,7 +233,7 @@ function RelancesPage() {
   const count = (b: RelanceBucket) => groups.get(b)?.length ?? 0;
   const done = doneId ? (pipeline.find((p) => p.companyId === doneId) ?? null) : null;
   const open = openId ? pipeline.find((p) => p.companyId === openId) : undefined;
-  const openCompany = openId ? companyById.get(openId) : undefined;
+  const { data: openCompany } = useCompany(openId ?? undefined);
   let idx = 0;
 
   return (

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { getProjectColor } from "@/lib/graph-colors";
-import type { Company, Projet } from "@/lib/types";
+import type { CompanyListItem, Projet } from "@/lib/types";
 
 // Diagramme de flux Pays → Secteur → Projet. Chaque flux représente une
 // entreprise liée à un projet : une entreprise liée à 3 projets compte 3 fois,
@@ -46,7 +46,13 @@ type Link = {
   w: number;
 };
 
-export function SankeyView({ companies, projets }: { companies: Company[]; projets: Projet[] }) {
+export function SankeyView({
+  companies,
+  projets,
+}: {
+  companies: CompanyListItem[];
+  projets: Projet[];
+}) {
   const navigate = useNavigate();
   const [hover, setHover] = useState<string | null>(null);
 

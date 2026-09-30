@@ -10,7 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList, useContactsDirectory } from "@/lib/queries/companies";
 import { useProjects } from "@/lib/queries/projects";
 import { CONTACT_FONCTIONS } from "@/lib/types";
 
@@ -28,7 +28,9 @@ export function CommandPalette({
   pages: PaletteLink[];
 }) {
   const navigate = useNavigate();
-  const { data: companies = [] } = useCompanies();
+  const { data: companies = [] } = useCompaniesList();
+  // L'annuaire n'est chargé qu'à l'ouverture de la palette.
+  const { data: contacts = [] } = useContactsDirectory(open);
   const { data: projets = [] } = useProjects();
 
   useEffect(() => {
@@ -41,20 +43,6 @@ export function CommandPalette({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
-
-  const contacts = useMemo(
-    () =>
-      companies.flatMap((c) =>
-        c.contacts.map((ct) => ({
-          id: ct.id,
-          nom: ct.nom.length > 70 ? `${ct.nom.slice(0, 70)}…` : ct.nom,
-          fonction: CONTACT_FONCTIONS.find((f) => f.value === ct.fonction)?.label ?? "",
-          companyId: c.id,
-          companyNom: c.nom,
-        })),
-      ),
-    [companies],
-  );
 
   const go = (to: string, params?: Record<string, string>) => {
     onOpenChange(false);
@@ -101,7 +89,9 @@ export function CommandPalette({
               onSelect={() => go("/entreprises/$id", { id: ct.companyId })}
             >
               <UserRound className="h-4 w-4 text-muted-foreground" />
-              <span className="truncate">{ct.nom}</span>
+              <span className="truncate">
+                {ct.nom.length > 70 ? `${ct.nom.slice(0, 70)}…` : ct.nom}
+              </span>
               <span className="ml-auto truncate pl-2 text-xs text-muted-foreground">
                 {ct.companyNom}
               </span>

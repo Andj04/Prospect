@@ -3,10 +3,10 @@ import { ChevronDown } from "lucide-react";
 import { CompanyAvatar } from "@/components/CompanyPreviewSheet";
 import { getProjectColor } from "@/lib/graph-colors";
 import { getSousComposanteIcon } from "@/lib/sous-composante-icons";
-import type { Company, Projet, SousComposante } from "@/lib/types";
+import type { CompanyListItem, Projet, SousComposante } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Group = { key: string; label: string; icon: string | null; companies: Company[] };
+type Group = { key: string; label: string; icon: string | null; companies: CompanyListItem[] };
 
 function ProjectColumn({
   projet,
@@ -111,7 +111,7 @@ export function ProjectBoardView({
   focusProjet,
   onOpen,
 }: {
-  companies: Company[];
+  companies: CompanyListItem[];
   projets: Projet[];
   sousComposantes: SousComposante[];
   focusProjet?: string | undefined;

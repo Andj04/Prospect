@@ -9,6 +9,7 @@ import { ALL_PROJETS_KEY, PROJETS_KEY } from "./keys";
 // map).
 export function useProjects() {
   return useQuery({
+    staleTime: 10 * 60_000,
     queryKey: PROJETS_KEY,
     queryFn: async (): Promise<Projet[]> => {
       const { data, error } = await supabase
@@ -27,6 +28,7 @@ export function useProjects() {
 // never falls back to a raw id.
 export function useAllProjects() {
   return useQuery({
+    staleTime: 10 * 60_000,
     queryKey: ALL_PROJETS_KEY,
     queryFn: async (): Promise<Projet[]> => {
       const { data, error } = await supabase.from("projets").select("*").order("ordre");

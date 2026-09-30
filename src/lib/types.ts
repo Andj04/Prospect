@@ -145,6 +145,45 @@ export type Company = {
 // Regroupe visuellement, dans le tableau Admin, les entreprises importées en
 // masse (ex. un nouveau lot de prospection) — pour ne pas les mélanger aux
 // entreprises créées normalement.
+// Version allégée d'une fiche pour les listes et les tableaux de bord :
+// les champs longs sont remplacés par un indicateur de présence, et la
+// recherche est préparée côté base. Voir supabase/migrations/0010_vue_liste.sql.
+export type CompanyListItem = {
+  id: string;
+  nom: string;
+  groupe?: string;
+  secteur?: string;
+  paysOrigine?: string;
+  structureDediee: boolean | null;
+  logoUrl?: string;
+  exclue: boolean;
+  raisonExclusion?: string;
+  importBatchId?: string;
+  typeEngagement?: "recurrent" | "ponctuel" | "";
+  nbContacts: number;
+  projets: string[];
+  sousComposantes: string[];
+  /** Texte minuscule pré-calculé : nom, groupe, secteur, pays, contacts, alignement. */
+  recherche: string;
+  /** Présence des champs longs, sans leur contenu. */
+  a: {
+    modeAcces: boolean;
+    budget: boolean;
+    descriptif: boolean;
+    programmes: boolean;
+    notes: boolean;
+    alignement: boolean;
+    precedent: boolean;
+    proposition: boolean;
+  };
+};
+
+export type ContactDirectoryEntry = Contact & {
+  companyId: string;
+  companyNom: string;
+  companySecteur: string;
+};
+
 export type ImportBatch = {
   id: string;
   label: string;

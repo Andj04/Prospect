@@ -1,4 +1,6 @@
 export const COMPANIES_KEY = ["companies"] as const;
+export const COMPANIES_LIST_KEY = ["companies", "liste"] as const;
+export const CONTACTS_KEY = ["contacts"] as const;
 export const PROJETS_KEY = ["projets"] as const;
 export const ALL_PROJETS_KEY = ["projets", "all"] as const;
 export const PIPELINE_KEY = ["pipeline"] as const;

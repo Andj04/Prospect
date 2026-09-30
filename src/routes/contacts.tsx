@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCompanies } from "@/lib/queries/companies";
+import { useContactsDirectory } from "@/lib/queries/companies";
 import { CONTACT_FONCTIONS, type ContactFonction } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -71,30 +71,15 @@ function CopyCell({
 // Annuaire de tous les contacts de la base, avec copie rapide des emails et
 // téléphones — pratique pour préparer un envoi groupé.
 function ContactsPage() {
-  const { data: companies = [], isLoading } = useCompanies();
+  const { data: contacts = [], isLoading } = useContactsDirectory();
   const [q, setQ] = useState("");
   const [fonction, setFonction] = useState(ALL);
   const [secteur, setSecteur] = useState(ALL);
   const [canal, setCanal] = useState<Canal>("tous");
   const [previewId, setPreviewId] = useState<string | null>(null);
 
-  const contacts = useMemo(
-    () =>
-      companies
-        .filter((c) => !c.exclue)
-        .flatMap((c) =>
-          c.contacts.map((ct) => ({
-            ...ct,
-            companyId: c.id,
-            companyNom: c.nom,
-            secteur: c.secteur ?? "",
-          })),
-        )
-        .sort((a, b) => a.companyNom.localeCompare(b.companyNom)),
-    [companies],
-  );
   const secteurs = useMemo(
-    () => [...new Set(contacts.map((c) => c.secteur).filter(Boolean))].sort(),
+    () => [...new Set(contacts.map((c) => c.companySecteur).filter(Boolean))].sort(),
     [contacts],
   );
 
@@ -104,7 +89,7 @@ function ContactsPage() {
       if (needle && !`${c.nom} ${c.companyNom} ${c.email ?? ""}`.toLowerCase().includes(needle))
         return false;
       if (fonction !== ALL && c.fonction !== fonction) return false;
-      if (secteur !== ALL && c.secteur !== secteur) return false;
+      if (secteur !== ALL && c.companySecteur !== secteur) return false;
       if (canal === "email" && !c.email) return false;
       if (canal === "telephone" && !c.telephone) return false;
       if (canal === "linkedin" && !c.linkedin) return false;

@@ -17,6 +17,23 @@ type HistoriqueRawRow = HistoriqueRow & { entreprise_id: string };
 const today = () => new Date().toISOString().slice(0, 10);
 const statutLabel = (s: PipelineStatut) => STATUTS.find((x) => x.value === s)?.label ?? s;
 
+// Compteur de relances en retard pour la pastille du menu : une requête
+// « count » sans aucune ligne transférée, présente sur toutes les pages.
+export function useOverdueCount() {
+  return useQuery({
+    queryKey: [...PIPELINE_KEY, "retards"],
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from("pipeline")
+        .select("entreprise_id", { count: "exact", head: true })
+        .lt("prochaine_action_date", today())
+        .not("statut", "in", "(partenariat-signe,sans-suite)");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
+
 export function usePipeline() {
   return useQuery({
     queryKey: PIPELINE_KEY,

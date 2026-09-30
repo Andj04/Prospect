@@ -3,13 +3,19 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
-  // staleTime 0 (React Query's default) means every remount — e.g. switching
-  // back to a tab you already visited — refetches over the network before
-  // rendering, even though realtime sync (see lib/realtime.ts) already
-  // invalidates these queries the moment another user actually changes
-  // something. A short staleTime lets cached data render immediately.
+  // Le temps réel (voir lib/realtime.ts) invalide déjà ces requêtes dès qu'une
+  // donnée change en base. Une durée de fraîcheur généreuse évite donc de
+  // recharger à chaque changement de page sans rien perdre en réactivité :
+  // 1 min pour ce qui bouge souvent, 10 min pour les référentiels.
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000 } },
+    defaultOptions: {
+      queries: {
+        staleTime: 60_000,
+        gcTime: 30 * 60_000,
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    },
   });
 
   const router = createRouter({

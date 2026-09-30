@@ -1,11 +1,17 @@
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { Company, Projet } from "@/lib/types";
+import type { CompanyListItem, Projet } from "@/lib/types";
 
 // Carte de chaleur secteurs × projets : quels secteurs peuvent financer quels
 // projets. Plus la case est foncée, plus il y a d'entreprises. Un clic ouvre
 // la liste des entreprises correspondantes.
-export function HeatmapView({ companies, projets }: { companies: Company[]; projets: Projet[] }) {
+export function HeatmapView({
+  companies,
+  projets,
+}: {
+  companies: CompanyListItem[];
+  projets: Projet[];
+}) {
   const navigate = useNavigate();
 
   const { rows, max, colTotals } = useMemo(() => {

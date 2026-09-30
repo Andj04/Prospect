@@ -1,19 +1,89 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase-client";
-import { mapCompany, type EntrepriseRow } from "@/lib/mappers";
-import type { Company } from "@/lib/types";
-import { COMPANIES_KEY, PIPELINE_KEY } from "./keys";
+import {
+  mapCompany,
+  mapCompanyListItem,
+  mapContact,
+  type ContactRow,
+  type EntrepriseListeRow,
+  type EntrepriseRow,
+} from "@/lib/mappers";
+import type { Company, CompanyListItem, ContactDirectoryEntry } from "@/lib/types";
+import { COMPANIES_KEY, COMPANIES_LIST_KEY, CONTACTS_KEY, PIPELINE_KEY } from "./keys";
 
 const SELECT =
   "*, entreprise_contacts(*), entreprise_projets(projet_id), entreprise_sous_composantes(sous_composante_id)";
 
-export function useCompanies() {
+// Liste allégée (~4x moins de données que la version complète) : tout ce qu'il
+// faut pour les listes, filtres, statistiques et cartographie. Les champs longs
+// n'y figurent que sous forme d'indicateur « renseigné ou non ».
+export function useCompaniesList() {
+  return useQuery({
+    queryKey: COMPANIES_LIST_KEY,
+    queryFn: async (): Promise<CompanyListItem[]> => {
+      const { data, error } = await supabase.from("entreprises_liste").select("*").order("nom");
+      if (error) throw error;
+      return (data as EntrepriseListeRow[]).map(mapCompanyListItem);
+    },
+  });
+}
+
+// Fiches complètes, champs longs inclus. Réservé aux écrans qui les affichent
+// ou les exportent (tableau Entreprises, export Excel) : 1 Mo par chargement.
+export function useCompanies(enabled = true) {
   return useQuery({
     queryKey: COMPANIES_KEY,
+    enabled,
     queryFn: async (): Promise<Company[]> => {
       const { data, error } = await supabase.from("entreprises").select(SELECT).order("nom");
       if (error) throw error;
       return (data as EntrepriseRow[]).map(mapCompany);
+    },
+  });
+}
+
+// Quelques fiches complètes seulement (favoris épinglés dans le menu).
+export function useCompaniesByIds(ids: string[]) {
+  return useQuery({
+    queryKey: [...COMPANIES_KEY, "par-ids", [...ids].sort().join(",")],
+    enabled: ids.length > 0,
+    queryFn: async (): Promise<{ id: string; nom: string }[]> => {
+      const { data, error } = await supabase
+        .from("entreprises")
+        .select("id, nom")
+        .in("id", ids)
+        .order("nom");
+      if (error) throw error;
+      return data as { id: string; nom: string }[];
+    },
+  });
+}
+
+// Annuaire des contacts : lit la table des contacts directement au lieu de
+// traverser les 304 fiches complètes.
+export function useContactsDirectory(enabled = true) {
+  return useQuery({
+    queryKey: CONTACTS_KEY,
+    enabled,
+    queryFn: async (): Promise<ContactDirectoryEntry[]> => {
+      const { data, error } = await supabase
+        .from("entreprise_contacts")
+        .select("*, entreprises!inner(nom, secteur, exclue)")
+        .order("nom");
+      if (error) throw error;
+      type Row = ContactRow & {
+        entreprise_id: string;
+        entreprises: { nom: string; secteur: string; exclue: boolean };
+      };
+      return (data as Row[])
+        .filter((r) => !r.entreprises.exclue)
+        .map((r) => ({
+          ...mapContact(r),
+          companyId: r.entreprise_id,
+          companyNom: r.entreprises.nom,
+          companySecteur: r.entreprises.secteur,
+        }))
+        .sort((a, b) => a.companyNom.localeCompare(b.companyNom));
     },
   });
 }
@@ -79,6 +149,7 @@ export function useSaveCompany() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
+      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
       queryClient.invalidateQueries({ queryKey: PIPELINE_KEY });
     },
   });
@@ -140,7 +211,10 @@ export function usePatchEntreprise() {
     onError: (_err, _vars, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
+      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
+    },
   });
 }
 
@@ -164,6 +238,7 @@ export function useDeleteCompany() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
+      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
       queryClient.invalidateQueries({ queryKey: PIPELINE_KEY });
     },
   });
@@ -181,7 +256,10 @@ export function useAddEntrepriseProjet() {
         .insert({ entreprise_id: entrepriseId, projet_id: projetId });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
+      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
+    },
   });
 }
 
@@ -196,6 +274,9 @@ export function useRemoveEntrepriseProjet() {
         .eq("projet_id", projetId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPANIES_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
+      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
+    },
   });
 }
