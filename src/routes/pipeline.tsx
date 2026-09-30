@@ -71,7 +71,7 @@ const ALL = "__all__";
 const PRIORITES: Priorite[] = ["haute", "moyenne", "basse"];
 
 function PipelinePage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const { data: companies = [] } = useCompanies();
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useProjects();
@@ -520,7 +520,7 @@ function PipelinePage() {
                                 date: new Date().toISOString().slice(0, 10),
                                 type: note.type,
                                 resume: note.resume,
-                                auteur: "Vous (Admin)",
+                                auteur: profile?.fullName || "Admin",
                               },
                             },
                             {

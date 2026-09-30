@@ -27,6 +27,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProjetTag, StatutBadge, projetLabel } from "@/components/badges";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -57,7 +68,7 @@ import { useImportBatches, useRenameImportBatch } from "@/lib/queries/import-bat
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects, useProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
-import { exportCompaniesToExcel } from "@/lib/export";
+import { ExportDialog } from "@/components/ExportDialog";
 import { PAYS_OPTIONS, SECTEUR_OPTIONS, type Company } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -437,6 +448,38 @@ function EditableCell({
   );
 }
 
+// Suppression irréversible (contacts, liens projets et pipeline partent en
+// cascade) : on demande toujours une confirmation explicite.
+function DeleteCompanyButton({ nom, onConfirm }: { nom: string; onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" aria-label={`Supprimer ${nom}`}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer {nom} ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            La fiche, ses contacts, ses liens aux projets et son suivi pipeline seront
+            définitivement supprimés.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 const ADMIN_TABLE_COLUMN_COUNT = 19;
 
 // Colonnes secondaires masquables du tableau admin (le reste — #, entreprise,
@@ -689,15 +732,7 @@ function AdminTable() {
         actions={
           <>
             <ColumnsMenu hidden={hiddenCols} onToggle={toggleCol} onReset={resetCols} />
-            <Button
-              variant="outline"
-              onClick={() =>
-                void exportCompaniesToExcel(sorted, pipeline, allProjets, sousComposantes)
-              }
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Exporter en Excel
-            </Button>
+            <ExportDialog filtered={sorted} />
           </>
         }
       />
@@ -940,10 +975,9 @@ function AdminTable() {
                                 <Pencil className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
+                            <DeleteCompanyButton
+                              nom={c.nom}
+                              onConfirm={() =>
                                 deleteCompany.mutate(c.id, {
                                   onSuccess: () => toast.success(`${c.nom} supprimée`),
                                   onError: (err) =>
@@ -952,11 +986,9 @@ function AdminTable() {
                                         ? err.message
                                         : "Échec de la suppression",
                                     ),
-                                });
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                                })
+                              }
+                            />
                           </div>
                         </td>
                       </tr>

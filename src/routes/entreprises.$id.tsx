@@ -10,6 +10,7 @@ import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects } from "@/lib/queries/projects";
 import { CONTACT_FONCTIONS } from "@/lib/types";
 import { exportCompanyToPdf } from "@/lib/export";
+import { useSousComposantes } from "@/lib/queries/sous-composantes";
 
 export const Route = createFileRoute("/entreprises/$id")({
   head: () => ({
@@ -62,6 +63,7 @@ function FicheEntreprise() {
   const { data: c, isLoading } = useCompany(id);
   const { data: pipeline = [] } = usePipeline();
   const { data: projets = [] } = useAllProjects();
+  const { data: sousComposantes = [] } = useSousComposantes();
   const pl = pipeline.find((p) => p.companyId === id);
 
   if (isLoading) {
@@ -108,7 +110,11 @@ function FicheEntreprise() {
               )}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
-              <Button onClick={() => exportCompanyToPdf(c, projets)}>
+              <Button
+                onClick={() =>
+                  void exportCompanyToPdf({ company: c, projets, sousComposantes, pipeline: pl })
+                }
+              >
                 <Download className="h-4 w-4" />
                 Télécharger en PDF
               </Button>
