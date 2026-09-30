@@ -38,6 +38,13 @@ export const SECTEUR_OPTIONS = [
   "Économie circulaire",
   "Eaux minérales et thermalisme",
   "Matériel électrique et industriel",
+  "Textile et habillement",
+  "Sécurité et gardiennage",
+  "Patrimoine et culture",
+  "Jeux d'argent et loterie",
+  "Action sociale et solidarité",
+  "Sport",
+  "Multisecteur",
 ] as const;
 
 // Pays d'origine du groupe/de la maison mère — sert à distinguer une
@@ -67,6 +74,8 @@ export const PAYS_OPTIONS = [
   "Canada",
   "Afrique du Sud",
   "Grèce",
+  "Jordanie",
+  "Australie",
   "Autre",
 ] as const;
 
