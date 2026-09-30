@@ -33,6 +33,7 @@ import { useCompanies } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useProjects } from "@/lib/queries/projects";
 import { STATUTS, type PipelineStatut, type Priorite } from "@/lib/types";
+import { formatMAD, weightedAmount } from "@/lib/pipeline-utils";
 
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({
@@ -189,13 +190,74 @@ function TableauDeBordPage() {
         color: STATUT_COLOR[s.value],
         onClick: () => void navigate({ to: "/pipeline" }),
       })),
+      parProjet: projets
+        .map((pr) => {
+          const dossiers = pipeline.filter(
+            (x) => x.projetCibleId === pr.id && x.statut !== "sans-suite",
+          );
+          return {
+            nom: pr.nom,
+            pondere: dossiers.reduce((sum, x) => sum + weightedAmount(x), 0),
+            vise: dossiers.reduce((sum, x) => sum + (x.montantVise ?? 0), 0),
+          };
+        })
+        .filter((x) => x.vise > 0)
+        .sort((a, b) => b.pondere - a.pondere),
+      dureeEtapes: (() => {
+        // Temps passé dans chaque étape, reconstitué à partir des changements
+        // d'étape consignés dans l'historique (entrées de type « Statut »).
+        const byLabel = new Map(STATUTS.map((st) => [st.label, st.value]));
+        const durations = new Map<PipelineStatut, number[]>();
+        for (const d of pipeline) {
+          const moves = d.historique
+            .filter((h) => h.type === "Statut")
+            .map((h) => ({
+              date: h.date,
+              to: byLabel.get(h.resume.split(" → ")[1]?.split(" (")[0] ?? ""),
+            }))
+            .filter((m): m is { date: string; to: PipelineStatut } => Boolean(m.to))
+            .sort((a, b) => a.date.localeCompare(b.date));
+          moves.forEach((m, i) => {
+            const end = moves[i + 1]?.date;
+            if (!end) return;
+            const days = (new Date(end).getTime() - new Date(m.date).getTime()) / 86_400_000;
+            durations.set(m.to, [...(durations.get(m.to) ?? []), days]);
+          });
+        }
+        return STATUTS.filter((st) => !["partenariat-signe", "sans-suite"].includes(st.value)).map(
+          (st) => {
+            const list = durations.get(st.value) ?? [];
+            return {
+              label: st.label,
+              n: list.length,
+              moyenne: list.length
+                ? Math.round(list.reduce((a, b) => a + b, 0) / list.length)
+                : null,
+            };
+          },
+        );
+      })(),
+      reussiteSecteur: (() => {
+        const m = new Map<string, { signes: number; clos: number }>();
+        for (const d of pipeline) {
+          if (d.statut !== "partenariat-signe" && d.statut !== "sans-suite") continue;
+          const secteur = companies.find((c) => c.id === d.companyId)?.secteur || "Non renseigné";
+          const cur = m.get(secteur) ?? { signes: 0, clos: 0 };
+          cur.clos += 1;
+          if (d.statut === "partenariat-signe") cur.signes += 1;
+          m.set(secteur, cur);
+        }
+        return [...m.entries()]
+          .map(([secteur, v]) => ({ secteur, ...v, taux: Math.round((v.signes / v.clos) * 100) }))
+          .sort((a, b) => b.taux - a.taux || b.clos - a.clos);
+      })(),
       priorites: (["haute", "moyenne", "basse"] as Priorite[]).map((p) => ({
         label: p.charAt(0).toUpperCase() + p.slice(1),
         count: pipeline.filter((x) => x.priorite === p && x.statut !== "identifie").length,
         tone: PRIORITE_TONE[p],
       })),
     };
-  }, [pipeline, navigate]);
+  }, [pipeline, navigate, projets, companies]);
 
   const changeTab = (v: string) => {
     setOnglet(v as Onglet);
@@ -507,6 +569,99 @@ function TableauDeBordPage() {
                     items={pipe.priorites}
                     emptyLabel="Aucun dossier engagé."
                   />
+                </div>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="card-soft p-4 sm:p-5">
+                    <h3 className="mb-1 text-sm font-semibold">Montant attendu par projet</h3>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      Pondéré par la probabilité de chaque étape
+                    </p>
+                    {pipe.parProjet.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Renseignez un montant visé et un projet ciblé dans les dossiers.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2.5">
+                        {pipe.parProjet.map((x) => (
+                          <li key={x.nom}>
+                            <div className="mb-1 flex justify-between gap-2 text-sm">
+                              <span className="truncate">{x.nom}</span>
+                              <span className="shrink-0 font-semibold tabular-nums">
+                                {formatMAD(x.pondere)}
+                              </span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-brand-orange"
+                                style={{
+                                  width: `${Math.round((x.pondere / (pipe.parProjet[0]?.pondere || 1)) * 100)}%`,
+                                }}
+                              />
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              {formatMAD(x.vise)} visés
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="card-soft p-4 sm:p-5">
+                    <h3 className="mb-1 text-sm font-semibold">Temps moyen par étape</h3>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      D'après les changements d'étape de l'historique
+                    </p>
+                    <ul className="space-y-2">
+                      {pipe.dureeEtapes.map((e) => (
+                        <li
+                          key={e.label}
+                          className="flex items-center justify-between gap-2 text-sm"
+                        >
+                          <span className="truncate text-foreground/85">{e.label}</span>
+                          <span className="shrink-0 tabular-nums">
+                            {e.moyenne === null ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              <>
+                                <strong>{e.moyenne} j</strong>
+                                <span className="ml-1 text-xs text-muted-foreground">({e.n})</span>
+                              </>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="card-soft p-4 sm:p-5">
+                    <h3 className="mb-1 text-sm font-semibold">Taux de réussite par secteur</h3>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      Partenariats signés parmi les dossiers clos
+                    </p>
+                    {pipe.reussiteSecteur.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Aucun dossier clos pour l'instant.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {pipe.reussiteSecteur.map((x) => (
+                          <li
+                            key={x.secteur}
+                            className="flex items-center justify-between gap-2 text-sm"
+                          >
+                            <span className="truncate text-foreground/85">{x.secteur}</span>
+                            <span className="shrink-0 tabular-nums">
+                              <strong className={x.taux >= 50 ? "text-success" : "text-foreground"}>
+                                {x.taux} %
+                              </strong>
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                ({x.signes}/{x.clos})
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </>
             )}

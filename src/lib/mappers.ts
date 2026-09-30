@@ -96,9 +96,19 @@ export type PipelineRow = {
   motif_sans_suite: string | null;
   priorite: Priorite;
   responsable: string;
-  dernier_contact: string;
+  responsable_id?: string | null;
+  dernier_contact: string | null;
   prochaine_action: string;
+  prochaine_action_date?: string | null;
+  montant_vise?: number | string | null;
+  montant_obtenu?: number | string | null;
+  projet_cible_id?: string | null;
+  statut_depuis?: string | null;
+  updated_at?: string | null;
 };
+
+const num = (v: number | string | null | undefined) =>
+  v === null || v === undefined || v === "" ? undefined : Number(v);
 
 export function mapPipeline(row: PipelineRow, historique: HistoriqueEntry[] = []): PipelineItem {
   return {
@@ -106,9 +116,15 @@ export function mapPipeline(row: PipelineRow, historique: HistoriqueEntry[] = []
     statut: row.statut,
     ...(row.motif_sans_suite ? { motifSansSuite: row.motif_sans_suite } : {}),
     priorite: row.priorite,
-    responsable: row.responsable,
-    dernierContact: row.dernier_contact,
+    responsable: row.responsable === "Non assigné" ? "" : row.responsable,
+    ...(row.responsable_id ? { responsableId: row.responsable_id } : {}),
+    ...(row.dernier_contact ? { dernierContact: row.dernier_contact } : {}),
     prochaineAction: row.prochaine_action,
+    ...(row.prochaine_action_date ? { prochaineActionDate: row.prochaine_action_date } : {}),
+    ...(num(row.montant_vise) !== undefined ? { montantVise: num(row.montant_vise)! } : {}),
+    ...(num(row.montant_obtenu) !== undefined ? { montantObtenu: num(row.montant_obtenu)! } : {}),
+    ...(row.projet_cible_id ? { projetCibleId: row.projet_cible_id } : {}),
+    statutDepuis: row.statut_depuis ?? row.updated_at ?? new Date().toISOString(),
     historique,
   };
 }

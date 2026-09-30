@@ -2,6 +2,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
+  BellRing,
+  UsersRound,
   Building2,
   ChevronsUpDown,
   Eye,
@@ -24,6 +26,8 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRealtimeSync } from "@/lib/realtime";
 import { useFavorites, useTheme, type ThemeChoice } from "@/lib/preferences";
 import { useCompanies } from "@/lib/queries/companies";
+import { usePipeline } from "@/lib/queries/pipeline";
+import { isOverdue } from "@/lib/pipeline-utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -50,6 +54,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -68,7 +73,9 @@ const HOME_NAV: NavEntry[] = [{ to: "/", label: "Accueil", icon: Home, group: "A
 
 const PROSPECTION_NAV: NavEntry[] = [
   { to: "/entreprises", label: "Entreprises", icon: Building2, group: "Prospection" },
+  { to: "/contacts", label: "Contacts", icon: UsersRound, group: "Prospection" },
   { to: "/pipeline", label: "Pipeline", icon: GitBranch, group: "Prospection" },
+  { to: "/relances", label: "Relances", icon: BellRing, group: "Prospection" },
 ];
 
 const ANALYSE_NAV: NavEntry[] = [
@@ -93,10 +100,12 @@ function NavGroup({
   label,
   items,
   pathname,
+  badges = {},
 }: {
   label?: string;
   items: NavEntry[];
   pathname: string;
+  badges?: Record<string, number>;
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
   return (
@@ -128,6 +137,11 @@ function NavGroup({
                     <span>{itemLabel}</span>
                   </Link>
                 </SidebarMenuButton>
+                {badges[to] ? (
+                  <SidebarMenuBadge className="rounded-full bg-destructive px-1.5 text-[11px] font-bold text-white peer-hover/menu-button:text-white">
+                    {badges[to]}
+                  </SidebarMenuBadge>
+                ) : null}
               </SidebarMenuItem>
             );
           })}
@@ -273,6 +287,8 @@ function UserMenu() {
 
 function AppSidebar({ pathname }: { pathname: string }) {
   const { isAdmin } = useAuth();
+  const { data: pipeline = [] } = usePipeline();
+  const overdue = pipeline.filter((p) => isOverdue(p)).length;
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="px-3 pb-2 pt-4">
@@ -293,7 +309,12 @@ function AppSidebar({ pathname }: { pathname: string }) {
       <div className="brand-stripe mx-3 h-0.5 rounded-full opacity-80 group-data-[collapsible=icon]:mx-2" />
       <SidebarContent className="pt-2">
         <NavGroup items={HOME_NAV} pathname={pathname} />
-        <NavGroup label="Prospection" items={PROSPECTION_NAV} pathname={pathname} />
+        <NavGroup
+          label="Prospection"
+          items={PROSPECTION_NAV}
+          pathname={pathname}
+          badges={{ "/relances": overdue }}
+        />
         <NavGroup label="Analyse" items={ANALYSE_NAV} pathname={pathname} />
         {isAdmin && <NavGroup label="Administration" items={ADMIN_NAV} pathname={pathname} />}
         <FavoritesGroup pathname={pathname} />

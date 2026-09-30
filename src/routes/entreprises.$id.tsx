@@ -10,6 +10,7 @@ import { usePipeline } from "@/lib/queries/pipeline";
 import { useAllProjects } from "@/lib/queries/projects";
 import { CONTACT_FONCTIONS } from "@/lib/types";
 import { exportCompanyToPdf } from "@/lib/export";
+import { DossierPanel } from "@/components/pipeline/DossierPanel";
 import { REQUIRED_CHECKS, missingRequired } from "@/lib/completeness";
 import { useFavorites } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
@@ -291,36 +292,9 @@ function FicheEntreprise() {
         )}
 
         {pl && (
-          <section className="card-soft border-primary/30 bg-accent/40 p-5 sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold">Suivi</h2>
-              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Lecture seule · non inclus dans le PDF
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <StatutBadge statut={pl.statut} />
-              <PrioriteBadge priorite={pl.priorite} />
-              <span className="text-muted-foreground">
-                Responsable : <strong className="text-foreground">{pl.responsable}</strong>
-              </span>
-              <span className="text-muted-foreground">
-                Dernier contact : <strong className="text-foreground">{pl.dernierContact}</strong>
-              </span>
-            </div>
-            <ul className="mt-4 space-y-2">
-              {pl.historique.slice(0, 3).map((h) => (
-                <li key={h.id} className="rounded-lg bg-card px-3 py-2 text-sm">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {h.date} · {h.type} · {h.auteur}
-                  </span>
-                  <p className="mt-0.5">{h.resume}</p>
-                </li>
-              ))}
-              {pl.historique.length === 0 && (
-                <li className="text-sm text-muted-foreground">Aucune note enregistrée.</li>
-              )}
-            </ul>
+          <section className="card-soft p-5 sm:p-6">
+            <h2 className="mb-4 text-base font-semibold">Suivi de prospection</h2>
+            <DossierPanel company={c} dossier={pl} />
           </section>
         )}
       </div>

@@ -186,9 +186,58 @@ export type PipelineItem = {
   motifSansSuite?: string;
   priorite: Priorite;
   responsable: string;
-  dernierContact: string;
+  responsableId?: string;
+  /** Date du dernier échange réel (appel, email, réunion…), jamais la date d'import. */
+  dernierContact?: string;
   prochaineAction: string;
+  prochaineActionDate?: string;
+  montantVise?: number;
+  montantObtenu?: number;
+  projetCibleId?: string;
+  /** Date d'entrée dans le statut courant. */
+  statutDepuis: string;
   historique: HistoriqueEntry[];
+};
+
+// Probabilité de signature par étape : sert au montant pondéré attendu.
+export const STATUT_PROBABILITE: Record<PipelineStatut, number> = {
+  identifie: 0.05,
+  "premier-contact": 0.1,
+  "en-discussion": 0.25,
+  "visite-programmee": 0.4,
+  "proposition-envoyee": 0.6,
+  "partenariat-signe": 1,
+  "sans-suite": 0,
+};
+
+// Statuts d'un dossier en cours (ni en attente de premier contact, ni clos).
+export const STATUTS_EN_COURS: PipelineStatut[] = [
+  "premier-contact",
+  "en-discussion",
+  "visite-programmee",
+  "proposition-envoyee",
+];
+
+// Types d'échange qui comptent comme un vrai contact (mettent à jour
+// « dernier contact »). « Statut » et « Note » sont des entrées internes.
+export const TYPES_ECHANGE = [
+  "Appel",
+  "Email",
+  "Réunion",
+  "Visite",
+  "Proposition",
+  "Décision",
+] as const;
+
+export type PipelineDocument = {
+  id: string;
+  companyId: string;
+  nom: string;
+  chemin: string;
+  taille?: number;
+  typeMime?: string;
+  auteur: string;
+  createdAt: string;
 };
 
 export type AppUser = {
@@ -207,7 +256,8 @@ export type AuditTable =
   | "pipeline_historique"
   | "projets"
   | "sous_composantes"
-  | "import_batches";
+  | "import_batches"
+  | "pipeline_documents";
 
 export type AuditLogEntry = {
   id: string;

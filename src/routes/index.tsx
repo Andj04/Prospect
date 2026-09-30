@@ -121,8 +121,14 @@ function AccueilPage() {
   const nextActions = useMemo(
     () =>
       pipeline
-        .filter((p) => !["identifie", "partenariat-signe", "sans-suite"].includes(p.statut))
-        .sort((a, b) => (a.priorite === "haute" ? -1 : 0) - (b.priorite === "haute" ? -1 : 0))
+        .filter(
+          (p) =>
+            !["partenariat-signe", "sans-suite"].includes(p.statut) &&
+            (p.statut !== "identifie" || Boolean(p.prochaineActionDate)),
+        )
+        .sort((a, b) =>
+          (a.prochaineActionDate ?? "9999").localeCompare(b.prochaineActionDate ?? "9999"),
+        )
         .slice(0, 6),
     [pipeline],
   );
@@ -200,7 +206,7 @@ function AccueilPage() {
             value={stats.contacts}
             icon={<UsersRound className="h-5 w-5" />}
             tone="orange"
-            onClick={() => navigate({ to: "/entreprises" })}
+            onClick={() => navigate({ to: "/contacts" })}
           />
           <StatCard
             index={3}
@@ -343,8 +349,8 @@ function AccueilPage() {
             title="Prochaines actions"
             icon={<CalendarClock className="h-4 w-4" />}
             action={
-              <Link to="/pipeline" className="text-xs font-medium text-primary hover:underline">
-                Pipeline
+              <Link to="/relances" className="text-xs font-medium text-primary hover:underline">
+                Toutes les relances
               </Link>
             }
           >
@@ -372,6 +378,8 @@ function AccueilPage() {
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
                           {p.prochaineAction || "Aucune action planifiée"}
+                          {p.prochaineActionDate &&
+                            ` · ${new Date(p.prochaineActionDate).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`}
                         </span>
                       </span>
                       <StatutBadge statut={p.statut} />

@@ -301,7 +301,32 @@ export async function exportCompanyToPdf({
       ["Statut", statutLabel(pipeline.statut)],
       ["Priorité", pipeline.priorite.charAt(0).toUpperCase() + pipeline.priorite.slice(1)],
       ["Responsable", pipeline.responsable],
-      ["Prochaine action", pipeline.prochaineAction],
+      [
+        "Prochaine action",
+        [
+          pipeline.prochaineAction,
+          pipeline.prochaineActionDate
+            ? `(échéance ${new Date(pipeline.prochaineActionDate).toLocaleDateString("fr-FR")})`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      ],
+      ["Projet ciblé", pipeline.projetCibleId ? projetName(pipeline.projetCibleId) : ""],
+      [
+        "Montant visé",
+        pipeline.montantVise ? `${pipeline.montantVise.toLocaleString("fr-FR")} MAD` : "",
+      ],
+      [
+        "Montant obtenu",
+        pipeline.montantObtenu ? `${pipeline.montantObtenu.toLocaleString("fr-FR")} MAD` : "",
+      ],
+      [
+        "Dernier contact",
+        pipeline.dernierContact
+          ? new Date(pipeline.dernierContact).toLocaleDateString("fr-FR")
+          : "",
+      ],
     ]);
   }
 
@@ -365,7 +390,7 @@ export const COLUMN_GROUPS: { key: ColumnGroup; label: string; description: stri
   {
     key: "pipeline",
     label: "Pipeline",
-    description: "Statut, priorité, responsable, prochaine action",
+    description: "Étape, responsable, relance, montants, projet ciblé",
   },
   { key: "qualite", label: "Qualité de la fiche", description: "Complétude et champs manquants" },
   { key: "exclusion", label: "Exclusion", description: "Exclue et raison" },
@@ -407,6 +432,11 @@ const COLUMNS: Col[] = [
   { header: "Priorité", key: "priorite", width: 11, group: "pipeline" },
   { header: "Responsable", key: "responsable", width: 18, group: "pipeline" },
   { header: "Prochaine action", key: "prochaineAction", width: 30, group: "pipeline" },
+  { header: "Échéance", key: "prochaineActionDate", width: 12, group: "pipeline" },
+  { header: "Projet ciblé", key: "projetCible", width: 26, group: "pipeline" },
+  { header: "Montant visé (MAD)", key: "montantVise", width: 16, group: "pipeline" },
+  { header: "Montant obtenu (MAD)", key: "montantObtenu", width: 16, group: "pipeline" },
+  { header: "Dernier contact", key: "dernierContact", width: 14, group: "pipeline" },
   { header: "Complétude (/10)", key: "completude", width: 12, group: "qualite" },
   { header: "Champs requis manquants", key: "manquants", width: 40, group: "qualite" },
   { header: "Exclue", key: "exclue", width: 9, group: "exclusion" },
@@ -503,6 +533,11 @@ export async function exportCompaniesToExcel(
       priorite: pl?.priorite ?? "",
       responsable: pl?.responsable ?? "",
       prochaineAction: pl?.prochaineAction ?? "",
+      prochaineActionDate: pl?.prochaineActionDate ?? "",
+      projetCible: pl?.projetCibleId ? projetName(pl.projetCibleId) : "",
+      montantVise: pl?.montantVise ?? "",
+      montantObtenu: pl?.montantObtenu ?? "",
+      dernierContact: pl?.dernierContact ?? "",
       completude: REQUIRED_CHECKS.length - miss.length,
       manquants: miss.join(", "),
       exclue: c.exclue ? "Oui" : "Non",

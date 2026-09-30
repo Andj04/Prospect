@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CartographieRouteImport } from './routes/cartographie'
 import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
+import { Route as RelancesRouteImport } from './routes/relances'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
 import { Route as EntreprisesIndexRouteImport } from './routes/entreprises.index'
@@ -38,6 +40,11 @@ const ConnexionRoute = ConnexionRouteImport.update({
   path: '/connexion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JournalRoute = JournalRouteImport.update({
   id: '/journal',
   path: '/journal',
@@ -56,6 +63,11 @@ const PipelineRoute = PipelineRouteImport.update({
 const ProjetsRoute = ProjetsRouteImport.update({
   id: '/projets',
   path: '/projets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelancesRoute = RelancesRouteImport.update({
+  id: '/relances',
+  path: '/relances',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TableauDeBordRoute = TableauDeBordRouteImport.update({
@@ -93,10 +105,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
+  '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
@@ -108,10 +122,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
+  '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
@@ -124,10 +140,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
+  '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
@@ -141,10 +159,12 @@ export interface FileRouteTypes {
     | '/'
     | '/cartographie'
     | '/connexion'
+    | '/contacts'
     | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
@@ -156,10 +176,12 @@ export interface FileRouteTypes {
     | '/'
     | '/cartographie'
     | '/connexion'
+    | '/contacts'
     | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
@@ -171,10 +193,12 @@ export interface FileRouteTypes {
     | '/'
     | '/cartographie'
     | '/connexion'
+    | '/contacts'
     | '/journal'
     | '/mon-compte'
     | '/pipeline'
     | '/projets'
+    | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
     | '/entreprises/$id'
@@ -187,10 +211,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartographieRoute: typeof CartographieRoute
   ConnexionRoute: typeof ConnexionRoute
+  ContactsRoute: typeof ContactsRoute
   JournalRoute: typeof JournalRoute
   MonCompteRoute: typeof MonCompteRoute
   PipelineRoute: typeof PipelineRoute
   ProjetsRoute: typeof ProjetsRoute
+  RelancesRoute: typeof RelancesRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   UtilisateursRoute: typeof UtilisateursRoute
   EntreprisesIdRoute: typeof EntreprisesIdRoute
@@ -222,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnexionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/journal': {
       id: '/journal'
       path: '/journal'
@@ -248,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/projets'
       fullPath: '/projets'
       preLoaderRoute: typeof ProjetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relances': {
+      id: '/relances'
+      path: '/relances'
+      fullPath: '/relances'
+      preLoaderRoute: typeof RelancesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tableau-de-bord': {
@@ -299,10 +339,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartographieRoute: CartographieRoute,
   ConnexionRoute: ConnexionRoute,
+  ContactsRoute: ContactsRoute,
   JournalRoute: JournalRoute,
   MonCompteRoute: MonCompteRoute,
   PipelineRoute: PipelineRoute,
   ProjetsRoute: ProjetsRoute,
+  RelancesRoute: RelancesRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   UtilisateursRoute: UtilisateursRoute,
   EntreprisesIdRoute: EntreprisesIdRoute,

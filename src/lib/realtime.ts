@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase-client";
 import {
   AUDIT_LOG_KEY,
   COMPANIES_KEY,
+  DOCUMENTS_KEY,
   PIPELINE_KEY,
   PROJETS_KEY,
   USERS_KEY,
@@ -19,6 +20,7 @@ const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
   entreprise_projets: [COMPANIES_KEY],
   pipeline: [PIPELINE_KEY],
   pipeline_historique: [PIPELINE_KEY],
+  pipeline_documents: [DOCUMENTS_KEY],
   projets: [PROJETS_KEY],
   profiles: [USERS_KEY],
   audit_log: [AUDIT_LOG_KEY],
