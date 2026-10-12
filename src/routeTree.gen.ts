@@ -15,6 +15,8 @@ import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as NouveauMotDePasseRouteImport } from './routes/nouveau-mot-de-passe'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
 import { Route as RelancesRouteImport } from './routes/relances'
@@ -53,6 +55,16 @@ const JournalRoute = JournalRouteImport.update({
 const MonCompteRoute = MonCompteRouteImport.update({
   id: '/mon-compte',
   path: '/mon-compte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NouveauMotDePasseRoute = NouveauMotDePasseRouteImport.update({
+  id: '/nouveau-mot-de-passe',
+  path: '/nouveau-mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PipelineRoute = PipelineRouteImport.update({
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -125,6 +139,8 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -143,6 +159,8 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -162,6 +180,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/journal'
     | '/mon-compte'
+    | '/mot-de-passe-oublie'
+    | '/nouveau-mot-de-passe'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -179,6 +199,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/journal'
     | '/mon-compte'
+    | '/mot-de-passe-oublie'
+    | '/nouveau-mot-de-passe'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -196,6 +218,8 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/journal'
     | '/mon-compte'
+    | '/mot-de-passe-oublie'
+    | '/nouveau-mot-de-passe'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -214,6 +238,8 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   JournalRoute: typeof JournalRoute
   MonCompteRoute: typeof MonCompteRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
+  NouveauMotDePasseRoute: typeof NouveauMotDePasseRoute
   PipelineRoute: typeof PipelineRoute
   ProjetsRoute: typeof ProjetsRoute
   RelancesRoute: typeof RelancesRoute
@@ -267,6 +293,20 @@ declare module '@tanstack/react-router' {
       path: '/mon-compte'
       fullPath: '/mon-compte'
       preLoaderRoute: typeof MonCompteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nouveau-mot-de-passe': {
+      id: '/nouveau-mot-de-passe'
+      path: '/nouveau-mot-de-passe'
+      fullPath: '/nouveau-mot-de-passe'
+      preLoaderRoute: typeof NouveauMotDePasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pipeline': {
@@ -342,6 +382,8 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   JournalRoute: JournalRoute,
   MonCompteRoute: MonCompteRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
+  NouveauMotDePasseRoute: NouveauMotDePasseRoute,
   PipelineRoute: PipelineRoute,
   ProjetsRoute: ProjetsRoute,
   RelancesRoute: RelancesRoute,

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { supabase } from "@/lib/supabase-client";
 
 export const Route = createFileRoute("/mon-compte")({
   head: () => ({
@@ -18,7 +17,7 @@ export const Route = createFileRoute("/mon-compte")({
 });
 
 function MonComptePage() {
-  const { profile, session, refreshProfile } = useAuth();
+  const { profile, session, updatePassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -83,20 +82,12 @@ function MonComptePage() {
                 return;
               }
               setSubmitting(true);
-              const { error: updateError } = await supabase.auth.updateUser({ password });
+              const { error: updateError } = await updatePassword(password);
+              setSubmitting(false);
               if (updateError) {
-                setSubmitting(false);
-                setError(updateError.message);
+                setError(updateError);
                 return;
               }
-              if (session) {
-                await supabase
-                  .from("profiles")
-                  .update({ password_change_required: false })
-                  .eq("id", session.user.id);
-              }
-              await refreshProfile();
-              setSubmitting(false);
               setPassword("");
               setConfirm("");
               toast.success("Mot de passe mis à jour");

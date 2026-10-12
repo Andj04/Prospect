@@ -40,6 +40,10 @@ type AuthCtx = {
   viewingAsUser: boolean;
   setViewingAsUser: (v: boolean) => void;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  /** Envoie le mail de réinitialisation qui ramène sur /nouveau-mot-de-passe. */
+  sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  /** Définit le mot de passe du compte connecté (y compris en session de récupération). */
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -104,6 +108,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error: error?.message ?? null };
+    },
+    sendPasswordReset: async (email) => {
+      // Le lien du mail doit revenir sur l'app : Supabase n'accepte que les
+      // URL déclarées dans Authentication > URL Configuration > Redirect URLs.
+      const redirectTo =
+        typeof window === "undefined"
+          ? undefined
+          : `${window.location.origin}/nouveau-mot-de-passe`;
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo ? { redirectTo } : {},
+      );
+      return { error: error?.message ?? null };
+    },
+    updatePassword: async (password) => {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) return { error: error.message };
+      // Le compte n'est plus sur un mot de passe temporaire.
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        await supabase
+          .from("profiles")
+          .update({ password_change_required: false })
+          .eq("id", data.session.user.id);
+        await loadProfile(data.session.user.id);
+      }
+      return { error: null };
     },
     signOut: async () => {
       await supabase.auth.signOut();
