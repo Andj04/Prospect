@@ -248,8 +248,11 @@ declare
   v_row jsonb;
   v_record_id text;
 begin
-  select coalesce(full_name, '') into v_actor_name
+  -- SELECT INTO renvoie NULL sur zéro ligne (écritures via service_role,
+  -- comme scripts/seed-ong.mjs) : le coalesce doit suivre, pas précéder (cf. 0003).
+  select full_name into v_actor_name
   from public.profiles where id = auth.uid();
+  v_actor_name := coalesce(v_actor_name, '');
 
   if TG_OP = 'DELETE' then
     v_row := to_jsonb(old);
