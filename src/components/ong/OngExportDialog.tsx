@@ -13,6 +13,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { exportOng, ONG_COLUMN_GROUPS, type OngColumnGroup } from "@/lib/export-ong";
 import { useOngFull } from "@/lib/queries/ong";
@@ -20,6 +27,8 @@ import { useOngPipeline } from "@/lib/queries/pipeline-ong";
 import { useAllProjects } from "@/lib/queries/projects";
 
 type Scope = "filtered" | "all";
+const TOUS = "__tous__";
+const PAR_PROJET = "__par_projet__";
 
 // Export des ONG au choix : format, lignes (filtre courant ou toutes) et blocs
 // de colonnes. Le bloc « Suivi » est décoché par défaut.
@@ -30,12 +39,18 @@ export function OngExportDialog({ filteredIds }: { filteredIds: Set<string> }) {
   const [groups, setGroups] = useState<OngColumnGroup[]>(
     ONG_COLUMN_GROUPS.filter((g) => g.id !== "suivi").map((g) => g.id),
   );
+  const [projet, setProjet] = useState(TOUS);
   const [busy, setBusy] = useState(false);
   const { data: ongs = [] } = useOngFull(open);
   const { data: pipeline = [] } = useOngPipeline();
   const { data: projets = [] } = useAllProjects();
 
-  const selected = scope === "all" ? ongs : ongs.filter((o) => filteredIds.has(o.id));
+  const parProjet = projet === PAR_PROJET && format === "xlsx";
+  const base = scope === "all" ? ongs : ongs.filter((o) => filteredIds.has(o.id));
+  const selected =
+    projet === TOUS || projet === PAR_PROJET
+      ? base
+      : base.filter((o) => o.projets.some((l) => l.projetId === projet));
   const toggle = (id: OngColumnGroup, on: boolean) =>
     setGroups((g) => (on ? [...g, id] : g.filter((x) => x !== id)));
   const allChecked = groups.length === ONG_COLUMN_GROUPS.length;
@@ -43,7 +58,7 @@ export function OngExportDialog({ filteredIds }: { filteredIds: Set<string> }) {
   const run = async () => {
     setBusy(true);
     try {
-      await exportOng({ ongs: selected, groups, format, projets, pipeline });
+      await exportOng({ ongs: selected, groups, format, projets, pipeline, parProjet });
       toast.success(`${selected.length} ONG exportées`);
       setOpen(false);
     } catch (e) {
@@ -98,6 +113,26 @@ export function OngExportDialog({ filteredIds }: { filteredIds: Set<string> }) {
                 <RadioGroupItem value="all" /> Toutes les ONG
               </label>
             </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Projet</Label>
+            <Select value={projet} onValueChange={setProjet}>
+              <SelectTrigger aria-label="Projet">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TOUS}>Tous les projets</SelectItem>
+                {format === "xlsx" && (
+                  <SelectItem value={PAR_PROJET}>Une feuille par projet (Excel)</SelectItem>
+                )}
+                {projets.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    Seulement : {p.nom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

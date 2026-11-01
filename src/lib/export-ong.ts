@@ -170,6 +170,8 @@ export type OngExportOptions = {
   format: "xlsx" | "csv";
   projets: Projet[];
   pipeline: OngPipelineItem[];
+  /** Excel seulement : une feuille par projet. */
+  parProjet?: boolean;
 };
 
 function download(blob: Blob, filename: string) {
@@ -181,32 +183,62 @@ function download(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportOng({ ongs, groups, format, projets, pipeline }: OngExportOptions) {
+const sheetName = (nom: string) => nom.replace(/[\\/?*[\]:]/g, " ").slice(0, 31) || "Feuille";
+
+export async function exportOng({
+  ongs,
+  groups,
+  format,
+  projets,
+  pipeline,
+  parProjet = false,
+}: OngExportOptions) {
   const ctx: Ctx = { projets, pipeline: new Map(pipeline.map((p) => [p.ongId, p])) };
   const cols = ONG_COLUMN_GROUPS.filter((g) => groups.includes(g.id)).flatMap((g) => g.cols);
   const date = new Date().toISOString().slice(0, 10);
-  const rows = ongs.map((o) => cols.map((c) => c.value(o, ctx)));
+  const toRows = (list: Ong[]) => list.map((o) => cols.map((c) => c.value(o, ctx)));
 
   if (format === "csv") {
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const body = [cols.map((c) => c.header), ...rows].map((r) => r.map(esc).join(";")).join("\r\n");
-    download(new Blob(["﻿" + body], { type: "text/csv;charset=utf-8" }), `ong-${date}.csv`);
+    const body = [cols.map((c) => c.header), ...toRows(ongs)]
+      .map((r) => r.map(esc).join(";"))
+      .join("\r\n");
+    download(new Blob(["\uFEFF" + body], { type: "text/csv;charset=utf-8" }), `ong-${date}.csv`);
     return;
   }
 
   const { default: ExcelJS } = await import("exceljs");
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet("ONG", { views: [{ state: "frozen", ySplit: 1 }] });
-  ws.addRow(cols.map((c) => c.header));
-  rows.forEach((r) => ws.addRow(r));
-  ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-  ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2F4F8F" } };
-  ws.columns.forEach((c, i) => {
-    const longest = Math.max(cols[i]!.header.length, ...rows.map((r) => String(r[i] ?? "").length));
-    c.width = Math.min(60, Math.max(12, longest + 2));
-    c.alignment = { vertical: "top", wrapText: true };
-  });
-  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+
+  const addSheet = (name: string, list: Ong[]) => {
+    const rows = toRows(list);
+    const ws = wb.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
+    ws.addRow(cols.map((c) => c.header));
+    rows.forEach((r) => ws.addRow(r));
+    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2F4F8F" } };
+    ws.columns.forEach((c, i) => {
+      const longest = Math.max(
+        cols[i]!.header.length,
+        ...rows.map((r) => String(r[i] ?? "").length),
+      );
+      c.width = Math.min(60, Math.max(12, longest + 2));
+      c.alignment = { vertical: "top", wrapText: true };
+    });
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+  };
+
+  if (parProjet) {
+    // Une feuille par projet ; une ONG liée à plusieurs projets figure dans chacune.
+    for (const p of projets) {
+      const list = ongs.filter((o) => o.projets.some((l) => l.projetId === p.id));
+      if (list.length > 0) addSheet(sheetName(p.nom), list);
+    }
+    const sans = ongs.filter((o) => o.projets.length === 0);
+    if (sans.length > 0) addSheet("Sans projet", sans);
+  } else {
+    addSheet("ONG", ongs);
+  }
 
   if (groups.includes("contacts")) {
     const wc = wb.addWorksheet("Contacts", { views: [{ state: "frozen", ySplit: 1 }] });
