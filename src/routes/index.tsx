@@ -23,6 +23,7 @@ import { ACTION_CLASS, ACTION_LABEL, describeEntry } from "@/lib/audit-format";
 import { REQUIRED_CHECKS_LIST, missingRequiredList } from "@/lib/completeness";
 import { getProjectColor } from "@/lib/graph-colors";
 import { useAuditLog } from "@/lib/queries/audit";
+import { AccueilOng } from "@/components/ong/AccueilOng";
 import { useCompaniesList } from "@/lib/queries/companies";
 import { usePipeline } from "@/lib/queries/pipeline";
 import { useProjects } from "@/lib/queries/projects";
@@ -181,6 +182,8 @@ function AccueilPage() {
             <div className="brand-stripe h-1 w-24 rounded-full" />
           </div>
         </section>
+
+        <AccueilOng />
 
         <StatGrid>
           <StatCard

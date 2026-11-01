@@ -8,7 +8,9 @@ import {
   FolderKanban,
   GitBranch,
   Gauge,
+  Globe2,
   Handshake,
+  HeartHandshake,
   Landmark,
   MessagesSquare,
   Search,
@@ -18,6 +20,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Donut, Funnel } from "@/components/charts";
+import { GlobalTab, OngTab } from "@/components/ong/DashboardOng";
 import {
   DistributionCard,
   PageHeader,
@@ -49,7 +52,7 @@ export const Route = createFileRoute("/tableau-de-bord")({
   component: TableauDeBordPage,
 });
 
-type Onglet = "vue" | "qualite" | "pipeline";
+type Onglet = "vue" | "qualite" | "pipeline" | "ong" | "global";
 
 const STATUT_COLOR: Record<PipelineStatut, string> = {
   identifie: "var(--muted-foreground)",
@@ -92,7 +95,7 @@ function countBy<T>(
 function TableauDeBordPage() {
   const navigate = useNavigate();
   const hash = useRouterState({ select: (s) => s.location.hash });
-  const initial: Onglet = hash === "qualite" || hash === "pipeline" ? hash : "vue";
+  const initial: Onglet = hash === "qualite" || hash === "pipeline" || hash === "ong" || hash === "global" ? hash : "vue";
   const [onglet, setOnglet] = useState<Onglet>(initial);
 
   const { data: companies = [] } = useCompaniesList();
@@ -290,6 +293,14 @@ function TableauDeBordPage() {
             <TabsTrigger value="pipeline" className="gap-1.5">
               <GitBranch className="h-4 w-4" />
               Pipeline
+            </TabsTrigger>
+            <TabsTrigger value="ong" className="gap-1.5">
+              <HeartHandshake className="h-4 w-4" />
+              ONG
+            </TabsTrigger>
+            <TabsTrigger value="global" className="gap-1.5">
+              <Globe2 className="h-4 w-4" />
+              Global
             </TabsTrigger>
           </TabsList>
 
@@ -666,6 +677,14 @@ function TableauDeBordPage() {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="ong" className="animate-in fade-in duration-300">
+            <OngTab />
+          </TabsContent>
+
+          <TabsContent value="global" className="animate-in fade-in duration-300">
+            <GlobalTab />
           </TabsContent>
         </Tabs>
       </div>

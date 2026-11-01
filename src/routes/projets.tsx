@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus, Settings2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ProjetsPartenaires } from "@/components/ong/ProjetsPartenaires";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -406,6 +407,8 @@ function ProjetsPage() {
             </Button>
           </form>
         </div>
+
+        <ProjetsPartenaires />
       </div>
 
       {managing && (

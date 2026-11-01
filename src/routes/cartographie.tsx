@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Columns3, Grid3x3, Orbit, RotateCcw, Search, Table2, Waypoints } from "lucide-react";
+import { Columns3, Grid3x3, HeartHandshake, Orbit, RotateCcw, Search, Table2, Waypoints } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CompanyPreviewSheet } from "@/components/CompanyPreviewSheet";
 import { PageHeader } from "@/components/page-header";
 import { HeatmapView } from "@/components/cartographie/HeatmapView";
+import { PartenairesView } from "@/components/cartographie/PartenairesView";
 import { MatrixView } from "@/components/cartographie/MatrixView";
 import { ProjectBoardView } from "@/components/cartographie/ProjectBoardView";
 import { RadialView } from "@/components/cartographie/RadialView";
@@ -23,7 +24,7 @@ import { useCompaniesList } from "@/lib/queries/companies";
 import { useProjects } from "@/lib/queries/projects";
 import { useSousComposantes } from "@/lib/queries/sous-composantes";
 
-const VIEWS = ["projets", "heatmap", "flux", "radial", "matrice"] as const;
+const VIEWS = ["projets", "heatmap", "flux", "radial", "matrice", "partenaires"] as const;
 type View = (typeof VIEWS)[number];
 type CartoSearch = { vue?: View; projet?: string };
 
@@ -81,6 +82,12 @@ const TAB_META: { value: View; label: string; icon: typeof Columns3; hint: strin
     label: "Tableau",
     icon: Table2,
     hint: "Une ligne par entreprise, une colonne par projet.",
+  },
+  {
+    value: "partenaires",
+    label: "Financeurs et ONG",
+    icon: HeartHandshake,
+    hint: "Les projets au centre, les financeurs d'un côté, les ONG partenaires de l'autre.",
   },
 ];
 
@@ -223,6 +230,14 @@ function CartographiePage() {
               sousComposantes={sousComposantes}
               projetId={search.projet}
               onProjetChange={setProjet}
+              onOpen={setPreviewId}
+            />
+          )}
+          {view === "partenaires" && (
+            <PartenairesView
+              companies={companies}
+              projets={projets}
+              focusProjet={search.projet}
               onOpen={setPreviewId}
             />
           )}

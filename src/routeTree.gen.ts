@@ -10,13 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnnuaireRouteImport } from './routes/annuaire'
 import { Route as CartographieRouteImport } from './routes/cartographie'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as EcheancesRouteImport } from './routes/echeances'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as NouveauMotDePasseRouteImport } from './routes/nouveau-mot-de-passe'
+import { Route as PasserellesRouteImport } from './routes/passerelles'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
 import { Route as RelancesRouteImport } from './routes/relances'
@@ -25,11 +28,24 @@ import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
 import { Route as EntreprisesIndexRouteImport } from './routes/entreprises.index'
 import { Route as EntreprisesIdRouteImport } from './routes/entreprises.$id'
 import { Route as EntreprisesNouvelleRouteImport } from './routes/entreprises.nouvelle'
+import { Route as OngIndexRouteImport } from './routes/ong.index'
+import { Route as OngIdRouteImport } from './routes/ong.$id'
+import { Route as OngCarteRouteImport } from './routes/ong.carte'
+import { Route as OngContactsRouteImport } from './routes/ong.contacts'
+import { Route as OngNouvelleRouteImport } from './routes/ong.nouvelle'
+import { Route as OngPipelineRouteImport } from './routes/ong.pipeline'
+import { Route as OngRelancesRouteImport } from './routes/ong.relances'
 import { Route as EntreprisesIdModifierRouteImport } from './routes/entreprises.$id_.modifier'
+import { Route as OngIdModifierRouteImport } from './routes/ong.$id_.modifier'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnuaireRoute = AnnuaireRouteImport.update({
+  id: '/annuaire',
+  path: '/annuaire',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CartographieRoute = CartographieRouteImport.update({
@@ -45,6 +61,11 @@ const ConnexionRoute = ConnexionRouteImport.update({
 const ContactsRoute = ContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcheancesRoute = EcheancesRouteImport.update({
+  id: '/echeances',
+  path: '/echeances',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JournalRoute = JournalRouteImport.update({
@@ -65,6 +86,11 @@ const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
 const NouveauMotDePasseRoute = NouveauMotDePasseRouteImport.update({
   id: '/nouveau-mot-de-passe',
   path: '/nouveau-mot-de-passe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasserellesRoute = PasserellesRouteImport.update({
+  id: '/passerelles',
+  path: '/passerelles',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PipelineRoute = PipelineRouteImport.update({
@@ -107,21 +133,64 @@ const EntreprisesNouvelleRoute = EntreprisesNouvelleRouteImport.update({
   path: '/entreprises/nouvelle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OngIndexRoute = OngIndexRouteImport.update({
+  id: '/ong/',
+  path: '/ong/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngIdRoute = OngIdRouteImport.update({
+  id: '/ong/$id',
+  path: '/ong/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngCarteRoute = OngCarteRouteImport.update({
+  id: '/ong/carte',
+  path: '/ong/carte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngContactsRoute = OngContactsRouteImport.update({
+  id: '/ong/contacts',
+  path: '/ong/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngNouvelleRoute = OngNouvelleRouteImport.update({
+  id: '/ong/nouvelle',
+  path: '/ong/nouvelle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngPipelineRoute = OngPipelineRouteImport.update({
+  id: '/ong/pipeline',
+  path: '/ong/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OngRelancesRoute = OngRelancesRouteImport.update({
+  id: '/ong/relances',
+  path: '/ong/relances',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntreprisesIdModifierRoute = EntreprisesIdModifierRouteImport.update({
   id: '/entreprises/$id_/modifier',
   path: '/entreprises/$id/modifier',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OngIdModifierRoute = OngIdModifierRouteImport.update({
+  id: '/ong/$id_/modifier',
+  path: '/ong/$id/modifier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/annuaire': typeof AnnuaireRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/contacts': typeof ContactsRoute
+  '/echeances': typeof EcheancesRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
+  '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -129,18 +198,29 @@ export interface FileRoutesByFullPath {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/ong/$id': typeof OngIdRoute
+  '/ong/carte': typeof OngCarteRoute
+  '/ong/contacts': typeof OngContactsRoute
+  '/ong/nouvelle': typeof OngNouvelleRoute
+  '/ong/pipeline': typeof OngPipelineRoute
+  '/ong/relances': typeof OngRelancesRoute
   '/entreprises/': typeof EntreprisesIndexRoute
+  '/ong/': typeof OngIndexRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
+  '/ong/$id/modifier': typeof OngIdModifierRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/annuaire': typeof AnnuaireRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/contacts': typeof ContactsRoute
+  '/echeances': typeof EcheancesRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
+  '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -148,19 +228,30 @@ export interface FileRoutesByTo {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/ong/$id': typeof OngIdRoute
+  '/ong/carte': typeof OngCarteRoute
+  '/ong/contacts': typeof OngContactsRoute
+  '/ong/nouvelle': typeof OngNouvelleRoute
+  '/ong/pipeline': typeof OngPipelineRoute
+  '/ong/relances': typeof OngRelancesRoute
   '/entreprises': typeof EntreprisesIndexRoute
+  '/ong': typeof OngIndexRoute
   '/entreprises/$id/modifier': typeof EntreprisesIdModifierRoute
+  '/ong/$id/modifier': typeof OngIdModifierRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/annuaire': typeof AnnuaireRoute
   '/cartographie': typeof CartographieRoute
   '/connexion': typeof ConnexionRoute
   '/contacts': typeof ContactsRoute
+  '/echeances': typeof EcheancesRoute
   '/journal': typeof JournalRoute
   '/mon-compte': typeof MonCompteRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveau-mot-de-passe': typeof NouveauMotDePasseRoute
+  '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
   '/relances': typeof RelancesRoute
@@ -168,20 +259,31 @@ export interface FileRoutesById {
   '/utilisateurs': typeof UtilisateursRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
   '/entreprises/nouvelle': typeof EntreprisesNouvelleRoute
+  '/ong/$id': typeof OngIdRoute
+  '/ong/carte': typeof OngCarteRoute
+  '/ong/contacts': typeof OngContactsRoute
+  '/ong/nouvelle': typeof OngNouvelleRoute
+  '/ong/pipeline': typeof OngPipelineRoute
+  '/ong/relances': typeof OngRelancesRoute
   '/entreprises/': typeof EntreprisesIndexRoute
+  '/ong/': typeof OngIndexRoute
   '/entreprises/$id_/modifier': typeof EntreprisesIdModifierRoute
+  '/ong/$id_/modifier': typeof OngIdModifierRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/annuaire'
     | '/cartographie'
     | '/connexion'
     | '/contacts'
+    | '/echeances'
     | '/journal'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/nouveau-mot-de-passe'
+    | '/passerelles'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -189,18 +291,29 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/ong/$id'
+    | '/ong/carte'
+    | '/ong/contacts'
+    | '/ong/nouvelle'
+    | '/ong/pipeline'
+    | '/ong/relances'
     | '/entreprises/'
+    | '/ong/'
     | '/entreprises/$id/modifier'
+    | '/ong/$id/modifier'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/annuaire'
     | '/cartographie'
     | '/connexion'
     | '/contacts'
+    | '/echeances'
     | '/journal'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/nouveau-mot-de-passe'
+    | '/passerelles'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -208,18 +321,29 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/ong/$id'
+    | '/ong/carte'
+    | '/ong/contacts'
+    | '/ong/nouvelle'
+    | '/ong/pipeline'
+    | '/ong/relances'
     | '/entreprises'
+    | '/ong'
     | '/entreprises/$id/modifier'
+    | '/ong/$id/modifier'
   id:
     | '__root__'
     | '/'
+    | '/annuaire'
     | '/cartographie'
     | '/connexion'
     | '/contacts'
+    | '/echeances'
     | '/journal'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/nouveau-mot-de-passe'
+    | '/passerelles'
     | '/pipeline'
     | '/projets'
     | '/relances'
@@ -227,19 +351,30 @@ export interface FileRouteTypes {
     | '/utilisateurs'
     | '/entreprises/$id'
     | '/entreprises/nouvelle'
+    | '/ong/$id'
+    | '/ong/carte'
+    | '/ong/contacts'
+    | '/ong/nouvelle'
+    | '/ong/pipeline'
+    | '/ong/relances'
     | '/entreprises/'
+    | '/ong/'
     | '/entreprises/$id_/modifier'
+    | '/ong/$id_/modifier'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnnuaireRoute: typeof AnnuaireRoute
   CartographieRoute: typeof CartographieRoute
   ConnexionRoute: typeof ConnexionRoute
   ContactsRoute: typeof ContactsRoute
+  EcheancesRoute: typeof EcheancesRoute
   JournalRoute: typeof JournalRoute
   MonCompteRoute: typeof MonCompteRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   NouveauMotDePasseRoute: typeof NouveauMotDePasseRoute
+  PasserellesRoute: typeof PasserellesRoute
   PipelineRoute: typeof PipelineRoute
   ProjetsRoute: typeof ProjetsRoute
   RelancesRoute: typeof RelancesRoute
@@ -247,8 +382,16 @@ export interface RootRouteChildren {
   UtilisateursRoute: typeof UtilisateursRoute
   EntreprisesIdRoute: typeof EntreprisesIdRoute
   EntreprisesNouvelleRoute: typeof EntreprisesNouvelleRoute
+  OngIdRoute: typeof OngIdRoute
+  OngCarteRoute: typeof OngCarteRoute
+  OngContactsRoute: typeof OngContactsRoute
+  OngNouvelleRoute: typeof OngNouvelleRoute
+  OngPipelineRoute: typeof OngPipelineRoute
+  OngRelancesRoute: typeof OngRelancesRoute
   EntreprisesIndexRoute: typeof EntreprisesIndexRoute
+  OngIndexRoute: typeof OngIndexRoute
   EntreprisesIdModifierRoute: typeof EntreprisesIdModifierRoute
+  OngIdModifierRoute: typeof OngIdModifierRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/annuaire': {
+      id: '/annuaire'
+      path: '/annuaire'
+      fullPath: '/annuaire'
+      preLoaderRoute: typeof AnnuaireRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cartographie': {
@@ -279,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/contacts'
       preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/echeances': {
+      id: '/echeances'
+      path: '/echeances'
+      fullPath: '/echeances'
+      preLoaderRoute: typeof EcheancesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journal': {
@@ -307,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/nouveau-mot-de-passe'
       fullPath: '/nouveau-mot-de-passe'
       preLoaderRoute: typeof NouveauMotDePasseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passerelles': {
+      id: '/passerelles'
+      path: '/passerelles'
+      fullPath: '/passerelles'
+      preLoaderRoute: typeof PasserellesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pipeline': {
@@ -365,6 +529,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntreprisesNouvelleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ong/': {
+      id: '/ong/'
+      path: '/ong'
+      fullPath: '/ong/'
+      preLoaderRoute: typeof OngIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/$id': {
+      id: '/ong/$id'
+      path: '/ong/$id'
+      fullPath: '/ong/$id'
+      preLoaderRoute: typeof OngIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/carte': {
+      id: '/ong/carte'
+      path: '/ong/carte'
+      fullPath: '/ong/carte'
+      preLoaderRoute: typeof OngCarteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/contacts': {
+      id: '/ong/contacts'
+      path: '/ong/contacts'
+      fullPath: '/ong/contacts'
+      preLoaderRoute: typeof OngContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/nouvelle': {
+      id: '/ong/nouvelle'
+      path: '/ong/nouvelle'
+      fullPath: '/ong/nouvelle'
+      preLoaderRoute: typeof OngNouvelleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/pipeline': {
+      id: '/ong/pipeline'
+      path: '/ong/pipeline'
+      fullPath: '/ong/pipeline'
+      preLoaderRoute: typeof OngPipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ong/relances': {
+      id: '/ong/relances'
+      path: '/ong/relances'
+      fullPath: '/ong/relances'
+      preLoaderRoute: typeof OngRelancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entreprises/$id_/modifier': {
       id: '/entreprises/$id_/modifier'
       path: '/entreprises/$id/modifier'
@@ -372,18 +585,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntreprisesIdModifierRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ong/$id_/modifier': {
+      id: '/ong/$id_/modifier'
+      path: '/ong/$id/modifier'
+      fullPath: '/ong/$id/modifier'
+      preLoaderRoute: typeof OngIdModifierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnnuaireRoute: AnnuaireRoute,
   CartographieRoute: CartographieRoute,
   ConnexionRoute: ConnexionRoute,
   ContactsRoute: ContactsRoute,
+  EcheancesRoute: EcheancesRoute,
   JournalRoute: JournalRoute,
   MonCompteRoute: MonCompteRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveauMotDePasseRoute: NouveauMotDePasseRoute,
+  PasserellesRoute: PasserellesRoute,
   PipelineRoute: PipelineRoute,
   ProjetsRoute: ProjetsRoute,
   RelancesRoute: RelancesRoute,
@@ -391,8 +614,16 @@ const rootRouteChildren: RootRouteChildren = {
   UtilisateursRoute: UtilisateursRoute,
   EntreprisesIdRoute: EntreprisesIdRoute,
   EntreprisesNouvelleRoute: EntreprisesNouvelleRoute,
+  OngIdRoute: OngIdRoute,
+  OngCarteRoute: OngCarteRoute,
+  OngContactsRoute: OngContactsRoute,
+  OngNouvelleRoute: OngNouvelleRoute,
+  OngPipelineRoute: OngPipelineRoute,
+  OngRelancesRoute: OngRelancesRoute,
   EntreprisesIndexRoute: EntreprisesIndexRoute,
+  OngIndexRoute: OngIndexRoute,
   EntreprisesIdModifierRoute: EntreprisesIdModifierRoute,
+  OngIdModifierRoute: OngIdModifierRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

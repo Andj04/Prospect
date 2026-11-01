@@ -10,6 +10,14 @@ import type {
   ImportBatch,
   MindmapNodeType,
   MindmapPosition,
+  Ong,
+  OngContact,
+  OngListItem,
+  OngPartenaire,
+  OngPipelineItem,
+  OngPipelineStatut,
+  OngProjetLien,
+  OngReseau,
   PipelineItem,
   Priorite,
   PipelineStatut,
@@ -287,5 +295,236 @@ export function mapMindmapPosition(row: MindmapPositionRow): MindmapPosition {
     projetContextId: row.projet_context_id,
     x: row.position_x,
     y: row.position_y,
+  };
+}
+
+/* ------------------------------- ONG ------------------------------- */
+
+export type OngContactRow = {
+  id: string;
+  fonction_categorie: ContactFonction;
+  fonction_detail: string;
+  nom: string;
+  email: string | null;
+  telephone: string | null;
+  linkedin: string | null;
+};
+
+export function mapOngContact(row: OngContactRow): OngContact {
+  return {
+    id: row.id,
+    fonctionCategorie: row.fonction_categorie,
+    ...(row.fonction_detail ? { fonctionDetail: row.fonction_detail } : {}),
+    nom: row.nom,
+    ...(row.email ? { email: row.email } : {}),
+    ...(row.telephone ? { telephone: row.telephone } : {}),
+    ...(row.linkedin ? { linkedin: row.linkedin } : {}),
+  };
+}
+
+export type OngPartenaireRow = {
+  id: string;
+  nom: string;
+  type: OngPartenaire["type"];
+  entreprise_id: string | null;
+};
+
+export function mapOngPartenaire(row: OngPartenaireRow): OngPartenaire {
+  return {
+    id: row.id,
+    nom: row.nom,
+    type: row.type,
+    ...(row.entreprise_id ? { entrepriseId: row.entreprise_id } : {}),
+  };
+}
+
+export type OngRow = {
+  id: string;
+  nom: string;
+  acronyme: string;
+  type_structure: Ong["typeStructure"];
+  annee_creation: number | null;
+  utilite_publique: boolean | null;
+  logo_url: string;
+  thematiques: string[];
+  activites_principales: string;
+  publics_cibles: string;
+  odd: number[];
+  siege: string;
+  echelle: Ong["echelle"];
+  milieu: Ong["milieu"];
+  regions: Ong["regions"];
+  regions_verifiees: boolean;
+  territoires_precis: string;
+  acces_financement: string;
+  budget_annuel: string;
+  financement_sources: Ong["financementSources"];
+  comment_partenariats: string;
+  apports: Ong["apports"];
+  atouts: string;
+  pourquoi_partenaire: string;
+  relation_amal_biladi: string;
+  transversale: boolean;
+  notes: string;
+  email: string;
+  telephone: string;
+  site_web: string;
+  reseaux: OngReseau[] | null;
+  ong_contacts?: OngContactRow[];
+  ong_partenaires?: OngPartenaireRow[];
+  ong_projets?: { projet_id: string; role: OngProjetLien["role"] }[];
+};
+
+// Ajoute la clé seulement si la valeur est renseignée (même convention que
+// mapCompany : les champs vides sont absents de l'objet).
+const opt = <K extends string>(key: K, v: string | number | null | undefined) =>
+  v === null || v === undefined || v === "" ? {} : ({ [key]: v } as Record<K, string | number>);
+
+export function mapOng(row: OngRow): Ong {
+  return {
+    id: row.id,
+    nom: row.nom,
+    ...opt("acronyme", row.acronyme),
+    typeStructure: row.type_structure,
+    ...opt("anneeCreation", row.annee_creation),
+    utilitePublique: row.utilite_publique,
+    ...opt("logoUrl", row.logo_url),
+    thematiques: row.thematiques ?? [],
+    ...opt("activitesPrincipales", row.activites_principales),
+    ...opt("publicsCibles", row.publics_cibles),
+    odd: row.odd ?? [],
+    ...opt("siege", row.siege),
+    echelle: row.echelle ?? [],
+    milieu: row.milieu ?? [],
+    regions: row.regions ?? [],
+    regionsVerifiees: row.regions_verifiees,
+    ...opt("territoiresPrecis", row.territoires_precis),
+    ...opt("accesFinancement", row.acces_financement),
+    ...opt("budgetAnnuel", row.budget_annuel),
+    financementSources: row.financement_sources ?? [],
+    ...opt("commentPartenariats", row.comment_partenariats),
+    apports: row.apports ?? [],
+    ...opt("atouts", row.atouts),
+    ...opt("pourquoiPartenaire", row.pourquoi_partenaire),
+    ...opt("relationAmalBiladi", row.relation_amal_biladi),
+    transversale: row.transversale,
+    ...opt("notes", row.notes),
+    ...opt("email", row.email),
+    ...opt("telephone", row.telephone),
+    ...opt("siteWeb", row.site_web),
+    reseaux: row.reseaux ?? [],
+    contacts: (row.ong_contacts ?? []).map(mapOngContact),
+    partenaires: (row.ong_partenaires ?? []).map(mapOngPartenaire),
+    projets: (row.ong_projets ?? []).map((p) => ({ projetId: p.projet_id, role: p.role })),
+  } as Ong;
+}
+
+export type OngListeRow = {
+  id: string;
+  nom: string;
+  acronyme: string;
+  type_structure: OngListItem["typeStructure"];
+  annee_creation: number | null;
+  utilite_publique: boolean | null;
+  logo_url: string;
+  thematiques: string[];
+  odd: number[];
+  siege: string;
+  echelle: OngListItem["echelle"];
+  milieu: OngListItem["milieu"];
+  regions: OngListItem["regions"];
+  regions_verifiees: boolean;
+  financement_sources: OngListItem["financementSources"];
+  apports: OngListItem["apports"];
+  transversale: boolean;
+  budget_annuel: string;
+  a_activites: boolean;
+  a_publics: boolean;
+  a_territoires: boolean;
+  a_acces_financement: boolean;
+  a_comment_partenariats: boolean;
+  a_atouts: boolean;
+  a_pourquoi: boolean;
+  a_relation: boolean;
+  a_notes: boolean;
+  a_coordonnees: boolean;
+  nb_contacts: number;
+  nb_partenaires: number;
+  nb_passerelles: number;
+  projet_ids: string[] | null;
+  projet_principal_id: string | null;
+  recherche: string | null;
+};
+
+export function mapOngListItem(row: OngListeRow): OngListItem {
+  return {
+    id: row.id,
+    nom: row.nom,
+    ...(row.acronyme ? { acronyme: row.acronyme } : {}),
+    typeStructure: row.type_structure,
+    ...(row.annee_creation ? { anneeCreation: row.annee_creation } : {}),
+    utilitePublique: row.utilite_publique,
+    ...(row.logo_url ? { logoUrl: row.logo_url } : {}),
+    thematiques: row.thematiques ?? [],
+    odd: row.odd ?? [],
+    ...(row.siege ? { siege: row.siege } : {}),
+    echelle: row.echelle ?? [],
+    milieu: row.milieu ?? [],
+    regions: row.regions ?? [],
+    regionsVerifiees: row.regions_verifiees,
+    financementSources: row.financement_sources ?? [],
+    apports: row.apports ?? [],
+    transversale: row.transversale,
+    ...(row.budget_annuel ? { budgetAnnuel: row.budget_annuel } : {}),
+    nbContacts: Number(row.nb_contacts ?? 0),
+    nbPartenaires: Number(row.nb_partenaires ?? 0),
+    nbPasserelles: Number(row.nb_passerelles ?? 0),
+    projets: row.projet_ids ?? [],
+    ...(row.projet_principal_id ? { projetPrincipalId: row.projet_principal_id } : {}),
+    recherche: row.recherche ?? "",
+    a: {
+      activites: row.a_activites,
+      publics: row.a_publics,
+      territoires: row.a_territoires,
+      accesFinancement: row.a_acces_financement,
+      commentPartenariats: row.a_comment_partenariats,
+      atouts: row.a_atouts,
+      pourquoi: row.a_pourquoi,
+      relation: row.a_relation,
+      notes: row.a_notes,
+      coordonnees: row.a_coordonnees,
+    },
+  };
+}
+
+export type PipelineOngRow = {
+  ong_id: string;
+  statut: OngPipelineStatut;
+  motif_sans_suite: string | null;
+  responsable: string;
+  responsable_id: string | null;
+  dernier_contact: string | null;
+  prochaine_action: string;
+  prochaine_action_date: string | null;
+  contact_interne: string;
+  statut_depuis: string;
+};
+
+export function mapOngPipeline(
+  row: PipelineOngRow,
+  historique: HistoriqueEntry[] = [],
+): OngPipelineItem {
+  return {
+    ongId: row.ong_id,
+    statut: row.statut,
+    ...(row.motif_sans_suite ? { motifSansSuite: row.motif_sans_suite } : {}),
+    responsable: row.responsable,
+    ...(row.responsable_id ? { responsableId: row.responsable_id } : {}),
+    ...(row.dernier_contact ? { dernierContact: row.dernier_contact } : {}),
+    prochaineAction: row.prochaine_action,
+    ...(row.prochaine_action_date ? { prochaineActionDate: row.prochaine_action_date } : {}),
+    contactInterne: row.contact_interne,
+    statutDepuis: row.statut_depuis,
+    historique,
   };
 }

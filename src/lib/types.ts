@@ -296,7 +296,13 @@ export type AuditTable =
   | "projets"
   | "sous_composantes"
   | "import_batches"
-  | "pipeline_documents";
+  | "pipeline_documents"
+  | "ong"
+  | "ong_contacts"
+  | "ong_partenaires"
+  | "ong_projets"
+  | "pipeline_ong"
+  | "pipeline_ong_historique";
 
 export type AuditLogEntry = {
   id: string;
@@ -319,3 +325,253 @@ export type MindmapPosition = {
   x: number;
   y: number;
 };
+
+/* ------------------------------- ONG ------------------------------- */
+// Section ONG : tables séparées des entreprises (voir
+// supabase/migrations/0011_ong.sql). « accesFinancement » décrit comment
+// l'ONG finance ses propres activités — à ne jamais confondre avec
+// Company.modeAcces (comment Amal Biladi accède à l'argent d'une entreprise).
+
+export type TypeStructure =
+  | "association"
+  | "fondation"
+  | "fondation-entreprise"
+  | "association-etudiante"
+  | "federation"
+  | "reseau-international";
+
+export const TYPE_STRUCTURE_OPTIONS: { value: TypeStructure; label: string }[] = [
+  { value: "association", label: "Association" },
+  { value: "fondation", label: "Fondation" },
+  { value: "fondation-entreprise", label: "Fondation d'entreprise" },
+  { value: "association-etudiante", label: "Association étudiante" },
+  { value: "federation", label: "Fédération ou union" },
+  { value: "reseau-international", label: "Réseau international" },
+];
+
+// Liste fermée définie par le Lisez-moi du fichier source.
+export const APPORTS = [
+  "Financement direct",
+  "Accès à un réseau d'entreprises ou de bailleurs",
+  "Expertise technique",
+  "Relais terrain",
+  "Recherche et évaluation",
+  "Visibilité et communication",
+  "Réplication d'un modèle",
+] as const;
+export type Apport = (typeof APPORTS)[number];
+
+export type Echelle = "local" | "regional" | "national" | "international";
+export const ECHELLES: { value: Echelle; label: string }[] = [
+  { value: "local", label: "Local" },
+  { value: "regional", label: "Régional" },
+  { value: "national", label: "National" },
+  { value: "international", label: "International" },
+];
+
+export type Milieu = "urbain" | "rural" | "montagnard" | "cotier";
+export const MILIEUX: { value: Milieu; label: string }[] = [
+  { value: "urbain", label: "Urbain" },
+  { value: "rural", label: "Rural" },
+  { value: "montagnard", label: "Montagnard" },
+  { value: "cotier", label: "Côtier" },
+];
+
+export type RegionCode =
+  | "MA-01"
+  | "MA-02"
+  | "MA-03"
+  | "MA-04"
+  | "MA-05"
+  | "MA-06"
+  | "MA-07"
+  | "MA-08"
+  | "MA-09"
+  | "MA-10"
+  | "MA-11"
+  | "MA-12";
+
+// Codes ISO 3166-2 tels que fournis par le fond de carte (morocco-map).
+export const REGIONS: { code: RegionCode; nom: string }[] = [
+  { code: "MA-01", nom: "Tanger-Tétouan-Al Hoceïma" },
+  { code: "MA-02", nom: "L'Oriental" },
+  { code: "MA-03", nom: "Fès-Meknès" },
+  { code: "MA-04", nom: "Rabat-Salé-Kénitra" },
+  { code: "MA-05", nom: "Béni Mellal-Khénifra" },
+  { code: "MA-06", nom: "Casablanca-Settat" },
+  { code: "MA-07", nom: "Marrakech-Safi" },
+  { code: "MA-08", nom: "Drâa-Tafilalet" },
+  { code: "MA-09", nom: "Souss-Massa" },
+  { code: "MA-10", nom: "Guelmim-Oued Noun" },
+  { code: "MA-11", nom: "Laâyoune-Sakia El Hamra" },
+  { code: "MA-12", nom: "Dakhla-Oued Ed-Dahab" },
+];
+
+export const ODD_LABELS: Record<number, string> = {
+  1: "Pas de pauvreté",
+  2: "Faim zéro",
+  3: "Bonne santé et bien-être",
+  4: "Éducation de qualité",
+  5: "Égalité entre les sexes",
+  6: "Eau propre et assainissement",
+  7: "Énergie propre et d'un coût abordable",
+  8: "Travail décent et croissance économique",
+  9: "Industrie, innovation et infrastructure",
+  10: "Inégalités réduites",
+  11: "Villes et communautés durables",
+  12: "Consommation et production responsables",
+  13: "Lutte contre les changements climatiques",
+  14: "Vie aquatique",
+  15: "Vie terrestre",
+  16: "Paix, justice et institutions efficaces",
+  17: "Partenariats pour la réalisation des objectifs",
+};
+
+export type OngReseau = { type: string; url: string };
+
+export type OngPartenaireType = "prive" | "institutionnel" | "academique" | "bailleur";
+
+export const PARTENAIRE_TYPES: { value: OngPartenaireType; label: string }[] = [
+  { value: "prive", label: "Partenaires privés" },
+  { value: "institutionnel", label: "Partenaires institutionnels" },
+  { value: "academique", label: "Partenaires académiques" },
+  { value: "bailleur", label: "Bailleurs connus" },
+];
+
+export type OngPartenaire = {
+  id: string;
+  nom: string;
+  type: OngPartenaireType;
+  /** Passerelle : entreprise de la base correspondant à ce partenaire (validée à la main). */
+  entrepriseId?: string;
+};
+
+export type OngContact = {
+  id: string;
+  fonctionCategorie: ContactFonction;
+  fonctionDetail?: string;
+  nom: string;
+  email?: string;
+  telephone?: string;
+  linkedin?: string;
+};
+
+export type OngProjetLien = { projetId: string; role: "principal" | "lie" };
+
+export type Ong = {
+  id: string;
+  nom: string;
+  acronyme?: string;
+  typeStructure: TypeStructure;
+  anneeCreation?: number;
+  /** null = inconnu */
+  utilitePublique: boolean | null;
+  logoUrl?: string;
+  thematiques: string[];
+  activitesPrincipales?: string;
+  publicsCibles?: string;
+  odd: number[];
+  siege?: string;
+  echelle: Echelle[];
+  milieu: Milieu[];
+  /** Déduites des lieux cités : à relire (voir regionsVerifiees). */
+  regions: RegionCode[];
+  regionsVerifiees: boolean;
+  territoiresPrecis?: string;
+  /** Comment l'ONG finance ses propres activités. */
+  accesFinancement?: string;
+  budgetAnnuel?: string;
+  financementSources: ("international" | "diaspora")[];
+  commentPartenariats?: string;
+  apports: Apport[];
+  atouts?: string;
+  pourquoiPartenaire?: string;
+  relationAmalBiladi?: string;
+  transversale: boolean;
+  notes?: string;
+  email?: string;
+  telephone?: string;
+  siteWeb?: string;
+  reseaux: OngReseau[];
+  contacts: OngContact[];
+  partenaires: OngPartenaire[];
+  projets: OngProjetLien[];
+  // Qualité des données (sources, signaux…) : stockée en base, ignorée par mapOng, jamais affichée.
+};
+
+export type OngListItem = {
+  id: string;
+  nom: string;
+  acronyme?: string;
+  typeStructure: TypeStructure;
+  anneeCreation?: number;
+  utilitePublique: boolean | null;
+  logoUrl?: string;
+  thematiques: string[];
+  odd: number[];
+  siege?: string;
+  echelle: Echelle[];
+  milieu: Milieu[];
+  regions: RegionCode[];
+  regionsVerifiees: boolean;
+  financementSources: ("international" | "diaspora")[];
+  apports: Apport[];
+  transversale: boolean;
+  budgetAnnuel?: string;
+  nbContacts: number;
+  nbPartenaires: number;
+  nbPasserelles: number;
+  projets: string[];
+  projetPrincipalId?: string;
+  /** Texte minuscule pré-calculé : nom, acronyme, siège, thématiques, territoires, partenaires. */
+  recherche: string;
+  /** Présence des champs longs, sans leur contenu. */
+  a: {
+    activites: boolean;
+    publics: boolean;
+    territoires: boolean;
+    accesFinancement: boolean;
+    commentPartenariats: boolean;
+    atouts: boolean;
+    pourquoi: boolean;
+    relation: boolean;
+    notes: boolean;
+    coordonnees: boolean;
+  };
+};
+
+export type OngPipelineStatut =
+  | "a-contacter"
+  | "contact-pris"
+  | "en-discussion"
+  | "convention-en-preparation"
+  | "partenaire-actif"
+  | "sans-suite";
+
+export const STATUTS_ONG: { value: OngPipelineStatut; label: string }[] = [
+  { value: "a-contacter", label: "À contacter" },
+  { value: "contact-pris", label: "Contact pris" },
+  { value: "en-discussion", label: "En discussion" },
+  { value: "convention-en-preparation", label: "Convention en préparation" },
+  { value: "partenaire-actif", label: "Partenaire actif" },
+  { value: "sans-suite", label: "Sans suite" },
+];
+
+export type OngHistoriqueEntry = HistoriqueEntry;
+
+export type OngPipelineItem = {
+  ongId: string;
+  statut: OngPipelineStatut;
+  motifSansSuite?: string;
+  responsable: string;
+  responsableId?: string;
+  dernierContact?: string;
+  prochaineAction: string;
+  prochaineActionDate?: string;
+  contactInterne: string;
+  statutDepuis: string;
+  historique: OngHistoriqueEntry[];
+};
+
+/** Entrée de l'annuaire des contacts ONG. */
+export type OngContactDirectoryEntry = OngContact & { ongId: string; ongNom: string };

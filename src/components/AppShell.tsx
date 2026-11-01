@@ -9,9 +9,13 @@ import {
   Eye,
   FolderKanban,
   GitBranch,
+  HeartHandshake,
+  Link2,
+  ListChecks,
   History,
   Home,
   LogOut,
+  Map as MapIcon,
   Monitor,
   Moon,
   Network,
@@ -27,6 +31,7 @@ import { useRealtimeSync } from "@/lib/realtime";
 import { useFavorites, useTheme, type ThemeChoice } from "@/lib/preferences";
 import { useCompaniesByIds } from "@/lib/queries/companies";
 import { useOverdueCount } from "@/lib/queries/pipeline";
+import { useOngOverdueCount } from "@/lib/queries/pipeline-ong";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -77,6 +82,20 @@ const PROSPECTION_NAV: NavEntry[] = [
   { to: "/relances", label: "Relances", icon: BellRing, group: "Prospection" },
 ];
 
+const ONG_NAV: NavEntry[] = [
+  { to: "/ong", label: "ONG", icon: HeartHandshake, group: "ONG" },
+  { to: "/ong/contacts", label: "Contacts ONG", icon: UsersRound, group: "ONG" },
+  { to: "/ong/pipeline", label: "Pipeline ONG", icon: GitBranch, group: "ONG" },
+  { to: "/ong/relances", label: "Relances ONG", icon: BellRing, group: "ONG" },
+  { to: "/ong/carte", label: "Carte des ONG", icon: MapIcon, group: "ONG" },
+];
+
+const CROISE_NAV: NavEntry[] = [
+  { to: "/annuaire", label: "Annuaire unifié", icon: Users, group: "Entreprises + ONG" },
+  { to: "/echeances", label: "Échéances", icon: ListChecks, group: "Entreprises + ONG" },
+  { to: "/passerelles", label: "Passerelles", icon: Link2, group: "Entreprises + ONG" },
+];
+
 const ANALYSE_NAV: NavEntry[] = [
   { to: "/tableau-de-bord", label: "Tableau de bord", icon: BarChart3, group: "Analyse" },
   { to: "/cartographie", label: "Cartographie", icon: Network, group: "Analyse" },
@@ -117,7 +136,11 @@ function NavGroup({
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map(({ to, label: itemLabel, icon: Icon }) => {
-            const active = isActivePath(pathname, to);
+            // « /ong » est aussi le préfixe de « /ong/contacts » : seule l'entrée
+            // la plus précise est active.
+            const active =
+              isActivePath(pathname, to) &&
+              !items.some((o) => o.to.length > to.length && isActivePath(pathname, o.to));
             return (
               <SidebarMenuItem key={to}>
                 <SidebarMenuButton
@@ -282,6 +305,7 @@ function UserMenu() {
 function AppSidebar({ pathname }: { pathname: string }) {
   const { isAdmin } = useAuth();
   const { data: overdue = 0 } = useOverdueCount();
+  const { data: ongOverdue = 0 } = useOngOverdueCount();
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="px-3 pb-2 pt-4">
@@ -308,6 +332,13 @@ function AppSidebar({ pathname }: { pathname: string }) {
           pathname={pathname}
           badges={{ "/relances": overdue }}
         />
+        <NavGroup
+          label="ONG"
+          items={ONG_NAV}
+          pathname={pathname}
+          badges={{ "/ong/relances": ongOverdue }}
+        />
+        <NavGroup label="Entreprises + ONG" items={CROISE_NAV} pathname={pathname} />
         <NavGroup label="Analyse" items={ANALYSE_NAV} pathname={pathname} />
         {isAdmin && <NavGroup label="Administration" items={ADMIN_NAV} pathname={pathname} />}
         <FavoritesGroup pathname={pathname} />
@@ -339,7 +370,7 @@ function PasswordChangeBanner() {
   );
 }
 
-const ALL_NAV = [...HOME_NAV, ...PROSPECTION_NAV, ...ANALYSE_NAV, ...ADMIN_NAV];
+const ALL_NAV = [...HOME_NAV, ...PROSPECTION_NAV, ...ONG_NAV, ...CROISE_NAV, ...ANALYSE_NAV, ...ADMIN_NAV];
 
 function currentSection(pathname: string): { group: string; label: string } {
   if (pathname === "/entreprises/nouvelle")
@@ -347,6 +378,10 @@ function currentSection(pathname: string): { group: string; label: string } {
   if (/^\/entreprises\/[^/]+\/modifier/.test(pathname))
     return { group: "Entreprises", label: "Modifier la fiche" };
   if (/^\/entreprises\/[^/]+$/.test(pathname)) return { group: "Entreprises", label: "Fiche" };
+  if (pathname === "/ong/nouvelle") return { group: "ONG", label: "Nouvelle fiche" };
+  if (/^\/ong\/[^/]+\/modifier/.test(pathname)) return { group: "ONG", label: "Modifier la fiche" };
+  if (/^\/ong\/(?!contacts$|pipeline$|relances$|carte$)[^/]+$/.test(pathname))
+    return { group: "ONG", label: "Fiche" };
   const entry = ALL_NAV.filter((e) => isActivePath(pathname, e.to)).sort(
     (a, b) => b.to.length - a.to.length,
   )[0];
@@ -393,13 +428,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [loading, session, navigate]);
 
   const paletteLinks = useMemo(
-    () => (isAdmin ? ALL_NAV : [...HOME_NAV, ...PROSPECTION_NAV, ...ANALYSE_NAV]),
+    () => (isAdmin ? ALL_NAV : [...HOME_NAV, ...PROSPECTION_NAV, ...ONG_NAV, ...CROISE_NAV, ...ANALYSE_NAV]),
     [isAdmin],
   );
 
   if (loading || !session || !profile) return <ShellSkeleton />;
 
   const section = currentSection(pathname);
+  const inOng = pathname === "/ong" || pathname.startsWith("/ong/");
 
   return (
     <SidebarProvider>
@@ -428,9 +464,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
             {isAdmin && (
               <Button size="sm" asChild>
-                <Link to="/entreprises/nouvelle">
+                <Link to={inOng ? "/ong/nouvelle" : "/entreprises/nouvelle"}>
                   <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ajouter une entreprise</span>
+                  <span className="hidden sm:inline">
+                    {inOng ? "Ajouter une ONG" : "Ajouter une entreprise"}
+                  </span>
                   <span className="sm:hidden">Ajouter</span>
                 </Link>
               </Button>

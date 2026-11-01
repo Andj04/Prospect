@@ -7,7 +7,11 @@ import {
   COMPANIES_LIST_KEY,
   CONTACTS_KEY,
   DOCUMENTS_KEY,
+  ONG_CONTACTS_KEY,
+  ONG_KEY,
+  ONG_LIST_KEY,
   PIPELINE_KEY,
+  PIPELINE_ONG_KEY,
   PROJETS_KEY,
   USERS_KEY,
 } from "@/lib/queries/keys";
@@ -18,6 +22,8 @@ import {
 // (voir supabase/migrations/0004_realtime.sql).
 const COMPANY_KEYS: QueryKey[] = [COMPANIES_KEY, COMPANIES_LIST_KEY];
 
+const ONG_KEYS: QueryKey[] = [ONG_KEY, ONG_LIST_KEY];
+
 const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
   entreprises: COMPANY_KEYS,
   entreprise_contacts: [...COMPANY_KEYS, CONTACTS_KEY],
@@ -25,6 +31,12 @@ const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
   pipeline: [PIPELINE_KEY],
   pipeline_historique: [PIPELINE_KEY],
   pipeline_documents: [DOCUMENTS_KEY],
+  ong: ONG_KEYS,
+  ong_contacts: [...ONG_KEYS, ONG_CONTACTS_KEY],
+  ong_partenaires: ONG_KEYS,
+  ong_projets: ONG_KEYS,
+  pipeline_ong: [PIPELINE_ONG_KEY],
+  pipeline_ong_historique: [PIPELINE_ONG_KEY],
   projets: [PROJETS_KEY],
   profiles: [USERS_KEY],
   audit_log: [AUDIT_LOG_KEY],

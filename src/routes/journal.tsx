@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useAuditLog } from "@/lib/queries/audit";
 import { useCompanies } from "@/lib/queries/companies";
+import { useOngList } from "@/lib/queries/ong";
 import { ACTION_CLASS, ACTION_LABEL, TABLE_LABEL, describeEntry } from "@/lib/audit-format";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +26,11 @@ function JournalPage() {
   const { data: entries = [], isLoading } = useAuditLog();
   const { data: companies = [] } = useCompanies();
 
+  const { data: ongs = [] } = useOngList();
+
   const companyName = (id: string) =>
     companies.find((c) => c.id === id)?.nom ?? "Entreprise supprimée";
+  const ongName = (id: string) => ongs.find((o) => o.id === id)?.nom ?? "ONG supprimée";
 
   if (!isAdmin) {
     return (
@@ -96,10 +100,10 @@ function JournalPage() {
                           params={{ id: company.id }}
                           className="text-primary hover:underline"
                         >
-                          {describeEntry(entry, companyName)}
+                          {describeEntry(entry, companyName, ongName)}
                         </Link>
                       ) : (
-                        describeEntry(entry, companyName)
+                        describeEntry(entry, companyName, ongName)
                       )}
                     </td>
                   </tr>

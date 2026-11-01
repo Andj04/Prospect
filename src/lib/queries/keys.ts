@@ -10,3 +10,8 @@ export const MINDMAP_POSITIONS_KEY = ["mindmap-positions"] as const;
 export const SOUS_COMPOSANTES_KEY = ["sous-composantes"] as const;
 export const IMPORT_BATCHES_KEY = ["import-batches"] as const;
 export const DOCUMENTS_KEY = ["pipeline-documents"] as const;
+
+export const ONG_KEY = ["ong"] as const;
+export const ONG_LIST_KEY = ["ong", "liste"] as const;
+export const ONG_CONTACTS_KEY = ["ong-contacts"] as const;
+export const PIPELINE_ONG_KEY = ["pipeline-ong"] as const;
