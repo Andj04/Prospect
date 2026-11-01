@@ -45,9 +45,12 @@ export function OddBadge({ n }: { n: number }) {
   return (
     <span
       title={`ODD ${n} — ${ODD_LABELS[n] ?? ""}`}
-      className="inline-grid h-7 min-w-7 place-items-center rounded-md bg-brand-orange/25 px-1.5 text-xs font-bold tabular-nums text-warning-foreground"
+      className="inline-flex items-center gap-1.5 rounded-md bg-brand-orange/25 py-0.5 pl-0.5 pr-2 text-xs font-medium text-warning-foreground"
     >
-      {n}
+      <span className="grid h-6 min-w-6 place-items-center rounded bg-brand-orange/40 px-1 font-bold tabular-nums">
+        {n}
+      </span>
+      {ODD_LABELS[n]}
     </span>
   );
 }

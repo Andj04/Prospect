@@ -234,7 +234,7 @@ export function OngForm({
           <Chips
             options={Object.entries(ODD_LABELS).map(([n, l]) => ({
               value: Number(n),
-              label: n,
+              label: `${n} · ${l}`,
               title: `ODD ${n} — ${l}`,
             }))}
             value={value.odd}

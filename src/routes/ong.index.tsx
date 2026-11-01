@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Download, Plus, RotateCcw, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { projetLabel } from "@/components/badges";
+import { OngExportDialog } from "@/components/ong/OngExportDialog";
 import { OddBadge, OngStatutBadge, Tag } from "@/components/ong/ong-badges";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -159,39 +160,6 @@ function OngPage() {
     setTransversale(false);
   };
 
-  const exportCsv = () =>
-    downloadCsv(
-      "ong-amal-biladi.csv",
-      [
-        "Nom",
-        "Acronyme",
-        "Type",
-        "Siège",
-        "Thématiques",
-        "Échelle",
-        "Milieu",
-        "Régions",
-        "Apports",
-        "Projet principal",
-        "Transversale",
-        "Statut",
-      ],
-      rows.map((o) => [
-        o.nom,
-        o.acronyme ?? "",
-        typeStructureLabel(o.typeStructure),
-        o.siege ?? "",
-        o.thematiques.join(", "),
-        o.echelle.map(echelleLabel).join(", "),
-        o.milieu.map(milieuLabel).join(", "),
-        o.regions.map(regionNom).join(", "),
-        o.apports.join(", "),
-        o.projetPrincipalId ? projetLabel(projets, o.projetPrincipalId) : "",
-        o.transversale ? "Oui" : "",
-        statutOf.get(o.id) ?? "",
-      ]),
-    );
-
   return (
     <AppShell>
       <div className="space-y-5">
@@ -200,10 +168,7 @@ function OngPage() {
           description={`${list.length} ONG et fondations partenaires potentielles. Les ONG ne sont pas des financeurs : elles apportent réseau, expertise ou relais terrain.`}
           actions={
             <>
-              <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}>
-                <Download className="h-4 w-4" />
-                Exporter ({rows.length})
-              </Button>
+              <OngExportDialog filteredIds={new Set(rows.map((o) => o.id))} />
               {isAdmin && (
                 <Button asChild>
                   <Link to="/ong/nouvelle">
@@ -361,12 +326,12 @@ function OngPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex max-w-40 flex-wrap gap-1">
-                        {o.odd.slice(0, 6).map((n) => (
+                      <div className="flex max-w-52 flex-wrap gap-1">
+                        {o.odd.slice(0, 2).map((n) => (
                           <OddBadge key={n} n={n} />
                         ))}
-                        {o.odd.length > 6 && (
-                          <span className="text-xs text-muted-foreground">+{o.odd.length - 6}</span>
+                        {o.odd.length > 2 && (
+                          <span className="text-xs text-muted-foreground">+{o.odd.length - 2}</span>
                         )}
                       </div>
                     </TableCell>
