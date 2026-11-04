@@ -242,9 +242,10 @@ function TableauDeBordPage() {
       })(),
       reussiteSecteur: (() => {
         const m = new Map<string, { signes: number; clos: number }>();
+        const secteurOf = new Map(companies.map((c) => [c.id, c.secteur]));
         for (const d of pipeline) {
           if (d.statut !== "partenariat-signe" && d.statut !== "sans-suite") continue;
-          const secteur = companies.find((c) => c.id === d.companyId)?.secteur || "Non renseigné";
+          const secteur = secteurOf.get(d.companyId) || "Non renseigné";
           const cur = m.get(secteur) ?? { signes: 0, clos: 0 };
           cur.clos += 1;
           if (d.statut === "partenariat-signe") cur.signes += 1;
@@ -305,7 +306,7 @@ function TableauDeBordPage() {
           </TabsList>
 
           {/* ------------------------- Vue d'ensemble ------------------------- */}
-          <TabsContent value="vue" className="space-y-4 animate-in fade-in duration-300">
+          <TabsContent value="vue" className="space-y-4 animate-in fade-in duration-150">
             <StatGrid>
               <StatCard
                 index={0}
@@ -401,7 +402,7 @@ function TableauDeBordPage() {
           </TabsContent>
 
           {/* ------------------------- Qualité des fiches ------------------------- */}
-          <TabsContent value="qualite" className="space-y-4 animate-in fade-in duration-300">
+          <TabsContent value="qualite" className="space-y-4 animate-in fade-in duration-150">
             <p className="max-w-3xl text-sm text-muted-foreground">
               Une fiche est complète quand ses 10 informations essentielles sont renseignées : nom,
               pays d'origine, secteur, mode d'accès au financement, descriptif, programmes ou
@@ -516,7 +517,7 @@ function TableauDeBordPage() {
           </TabsContent>
 
           {/* ------------------------- Pipeline ------------------------- */}
-          <TabsContent value="pipeline" className="space-y-4 animate-in fade-in duration-300">
+          <TabsContent value="pipeline" className="space-y-4 animate-in fade-in duration-150">
             {pipe.engaged === 0 ? (
               <div className="card-soft flex flex-col items-center gap-3 px-6 py-14 text-center">
                 <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -679,11 +680,11 @@ function TableauDeBordPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="ong" className="animate-in fade-in duration-300">
+          <TabsContent value="ong" className="animate-in fade-in duration-150">
             <OngTab />
           </TabsContent>
 
-          <TabsContent value="global" className="animate-in fade-in duration-300">
+          <TabsContent value="global" className="animate-in fade-in duration-150">
             <GlobalTab />
           </TabsContent>
         </Tabs>

@@ -61,6 +61,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   useCompanies,
+  usePrefetchCompany,
   useDeleteCompany,
   usePatchEntreprise,
   type PatchableField,
@@ -128,6 +129,62 @@ type EntreprisesSearch = {
   projet?: string;
   manque?: string;
 };
+
+const SECTEUR_CHOICES = SECTEUR_OPTIONS.map((s) => ({ value: s, label: s }));
+const PAYS_CHOICES = PAYS_OPTIONS.map((p) => ({ value: p, label: p }));
+const ENGAGEMENT_CHOICES = [
+  { value: "recurrent", label: "Récurrent" },
+  { value: "ponctuel", label: "Ponctuel" },
+];
+
+// Menu déroulant « paresseux » pour les cellules du tableau : tant qu'on n'a
+// pas cliqué, on affiche un simple bouton. Monter un vrai <Select> (et toutes
+// ses options) dans chacune des 300 lignes rendait le tableau très lent.
+function LazySelect({
+  value,
+  options,
+  onChange,
+  className,
+}: {
+  value?: string | undefined;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+  className?: string;
+}) {
+  const [active, setActive] = useState(false);
+  const label = options.find((o) => o.value === value)?.label;
+  const trigger = cn(
+    "flex h-8 items-center justify-between gap-1 rounded-md border border-input bg-transparent px-3 text-left text-xs",
+    className,
+  );
+  if (!active) {
+    return (
+      <button type="button" className={trigger} onClick={() => setActive(true)}>
+        <span className={cn("truncate", !label && "text-muted-foreground")}>{label ?? "—"}</span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+      </button>
+    );
+  }
+  return (
+    <Select
+      defaultOpen
+      {...(value ? { value } : {})}
+      onValueChange={onChange}
+      onOpenChange={(open) => !open && setActive(false)}
+    >
+      <SelectTrigger className={cn("h-8 text-xs", className)}>
+        <SelectValue placeholder="—" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 function useFiltered() {
   const { data: companies = [], isLoading } = useCompanies();
@@ -781,6 +838,11 @@ function AdminTable() {
   const { list, filters, isLoading } = useFiltered();
   const [previewId, setPreviewId] = useState<string | null>(null);
   const { data: pipeline = [] } = usePipeline();
+  const prefetchCompany = usePrefetchCompany();
+  const pipelineById = useMemo(() => new Map(pipeline.map((p) => [p.companyId, p])), [pipeline]);
+  // 300 lignes × 19 cellules éditables (dont des menus déroulants) : on affiche
+  // par tranches pour que la page reste fluide, le reste se charge à la demande.
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const { hiddenCols, toggleCol, resetCols } = useHiddenColumns();
   const { data: allProjets = [] } = useAllProjects();
   const { data: sousComposantes = [] } = useSousComposantes();
@@ -868,6 +930,8 @@ function AdminTable() {
     </th>
   );
 
+  let budget = limit;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -950,10 +1014,12 @@ function AdminTable() {
             {groups.flatMap((group): ReactNode[] => {
               if (group.rows.length === 0) return [];
               const collapsed = collapsedGroups.has(group.key);
+              const visibleRows = collapsed ? [] : group.rows.slice(0, Math.max(budget, 0));
+              budget -= visibleRows.length;
               const rowNodes = collapsed
                 ? []
-                : group.rows.map(({ company: c, number }) => {
-                    const pl = pipeline.find((p) => p.companyId === c.id);
+                : visibleRows.map(({ company: c, number }) => {
+                    const pl = pipelineById.get(c.id);
                     return (
                       <tr
                         key={c.id}
@@ -982,38 +1048,20 @@ function AdminTable() {
                           />
                         </td>
                         <td data-col="secteur" className="px-3 py-2">
-                          <Select
-                            {...(c.secteur ? { value: c.secteur } : {})}
-                            onValueChange={(v) => patch(c.id, { secteur: v })}
-                          >
-                            <SelectTrigger className="h-8 w-[170px] text-xs">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SECTEUR_OPTIONS.map((s) => (
-                                <SelectItem key={s} value={s}>
-                                  {s}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <LazySelect
+                            value={c.secteur}
+                            options={SECTEUR_CHOICES}
+                            onChange={(v) => patch(c.id, { secteur: v })}
+                            className="w-[170px]"
+                          />
                         </td>
                         <td data-col="pays" className="px-3 py-2">
-                          <Select
-                            {...(c.paysOrigine ? { value: c.paysOrigine } : {})}
-                            onValueChange={(v) => patch(c.id, { paysOrigine: v })}
-                          >
-                            <SelectTrigger className="h-8 w-[150px] text-xs">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PAYS_OPTIONS.map((p) => (
-                                <SelectItem key={p} value={p}>
-                                  {p}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <LazySelect
+                            value={c.paysOrigine}
+                            options={PAYS_CHOICES}
+                            onChange={(v) => patch(c.id, { paysOrigine: v })}
+                            className="w-[150px]"
+                          />
                         </td>
                         <td data-col="logo" className="px-3 py-2">
                           <LogoCell value={c.logoUrl} onSave={(v) => patch(c.id, { logoUrl: v })} />
@@ -1040,18 +1088,12 @@ function AdminTable() {
                           />
                         </td>
                         <td data-col="engagement" className="px-3 py-2">
-                          <Select
-                            {...(c.typeEngagement ? { value: c.typeEngagement } : {})}
-                            onValueChange={(v) => patch(c.id, { typeEngagement: v })}
-                          >
-                            <SelectTrigger className="h-8 w-[130px] text-xs">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="recurrent">Récurrent</SelectItem>
-                              <SelectItem value="ponctuel">Ponctuel</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <LazySelect
+                            value={c.typeEngagement}
+                            options={ENGAGEMENT_CHOICES}
+                            onChange={(v) => patch(c.id, { typeEngagement: v })}
+                            className="w-[130px]"
+                          />
                         </td>
                         <td data-col="descriptif" className="px-3 py-2">
                           <EditableLongCell
@@ -1109,11 +1151,22 @@ function AdminTable() {
                         </td>
                         <td data-col="actions" className="px-3 py-2">
                           <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setPreviewId(c.id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onMouseEnter={() => prefetchCompany(c.id)}
+                              onFocus={() => prefetchCompany(c.id)}
+                              onClick={() => setPreviewId(c.id)}
+                            >
                               Aperçu
                             </Button>
                             <Button variant="ghost" size="sm" asChild>
-                              <Link to="/entreprises/$id/modifier" params={{ id: c.id }}>
+                              <Link
+                                to="/entreprises/$id/modifier"
+                                params={{ id: c.id }}
+                                onMouseEnter={() => prefetchCompany(c.id)}
+                                onFocus={() => prefetchCompany(c.id)}
+                              >
                                 <Pencil className="h-4 w-4" />
                               </Link>
                             </Button>
@@ -1171,17 +1224,34 @@ function AdminTable() {
           )
         )}
       </DualScrollTable>
+      {sorted.length > limit && (
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            {limit} sur {sorted.length} affichées
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+            Afficher {Math.min(PAGE_SIZE, sorted.length - limit)} de plus
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setLimit(sorted.length)}>
+            Tout afficher
+          </Button>
+        </div>
+      )}
       <CompanyPreviewSheet companyId={previewId} onOpenChange={(o) => !o && setPreviewId(null)} />
     </div>
   );
 }
 
+const PAGE_SIZE = 60;
+
 /* ---------------- Utilisateur : liste lecture ---------------- */
 
 function UserGrid() {
+  const prefetchCompany = usePrefetchCompany();
   const { list, filters, isLoading } = useFiltered();
   const { data: allProjets = [] } = useAllProjects();
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -1198,11 +1268,12 @@ function UserGrid() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((c: Company, i) => {
+          {list.slice(0, limit).map((c: Company, i) => {
             const r = reveal(i);
             return (
               <button
                 key={c.id}
+                onMouseEnter={() => prefetchCompany(c.id)}
                 onClick={() => setPreviewId(c.id)}
                 className={cn(
                   "card-soft group p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-md",
@@ -1239,6 +1310,16 @@ function UserGrid() {
               </button>
             );
           })}
+        </div>
+      )}
+      {list.length > limit && (
+        <div className="flex justify-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+            Afficher {Math.min(PAGE_SIZE, list.length - limit)} de plus
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setLimit(list.length)}>
+            Tout afficher
+          </Button>
         </div>
       )}
       {!isLoading && list.length === 0 && (

@@ -29,7 +29,7 @@ export function HeatmapView({
   }, [companies, projets]);
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-300">
+    <div className="space-y-3 animate-in fade-in duration-150">
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span>Nombre d'entreprises</span>
         <span className="flex items-center gap-1">

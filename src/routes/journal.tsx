@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useAuditLog } from "@/lib/queries/audit";
-import { useCompanies } from "@/lib/queries/companies";
+import { useCompaniesList } from "@/lib/queries/companies";
 import { useOngList } from "@/lib/queries/ong";
 import { ACTION_CLASS, ACTION_LABEL, TABLE_LABEL, describeEntry } from "@/lib/audit-format";
 import { cn } from "@/lib/utils";
@@ -24,13 +25,15 @@ export const Route = createFileRoute("/journal")({
 function JournalPage() {
   const { isAdmin } = useAuth();
   const { data: entries = [], isLoading } = useAuditLog();
-  const { data: companies = [] } = useCompanies();
-
+  // Liste allégée (les noms suffisent ici) plutôt que les fiches complètes,
+  // et tables de correspondance plutôt qu'une recherche par ligne du journal.
+  const { data: companies = [] } = useCompaniesList();
   const { data: ongs = [] } = useOngList();
+  const companyById = useMemo(() => new Map(companies.map((c) => [c.id, c])), [companies]);
+  const ongById = useMemo(() => new Map(ongs.map((o) => [o.id, o])), [ongs]);
 
-  const companyName = (id: string) =>
-    companies.find((c) => c.id === id)?.nom ?? "Entreprise supprimée";
-  const ongName = (id: string) => ongs.find((o) => o.id === id)?.nom ?? "ONG supprimée";
+  const companyName = (id: string) => companyById.get(id)?.nom ?? "Entreprise supprimée";
+  const ongName = (id: string) => ongById.get(id)?.nom ?? "ONG supprimée";
 
   if (!isAdmin) {
     return (
@@ -63,13 +66,11 @@ function JournalPage() {
             </thead>
             <tbody>
               {entries.map((entry) => {
-                const company = companies.find(
-                  (c) =>
-                    c.id ===
-                    (entry.tableName === "entreprises"
-                      ? entry.recordId
-                      : ((entry.newData ?? entry.oldData)?.["entreprise_id"] as
-                          string | undefined)),
+                const company = companyById.get(
+                  (entry.tableName === "entreprises"
+                    ? entry.recordId
+                    : ((entry.newData ?? entry.oldData)?.["entreprise_id"] as string | undefined)) ??
+                    "",
                 );
                 return (
                   <tr key={entry.id} className="border-t border-border hover:bg-muted/40">

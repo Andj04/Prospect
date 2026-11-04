@@ -5,7 +5,8 @@ import type { CSSProperties } from "react";
 export function reveal(index: number): { className: string; style: CSSProperties } {
   return {
     className:
-      "animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-fill-mode:both] motion-reduce:animate-none",
-    style: { animationDelay: `${Math.min(index, 12) * 45}ms` },
+      "animate-in fade-in duration-200 [animation-fill-mode:both] motion-reduce:animate-none",
+    // Décalage plafonné à 3 éléments : au-delà, l'attente se voyait (jusqu'à 1 s).
+    style: { animationDelay: `${Math.min(index, 3) * 25}ms` },
   };
 }

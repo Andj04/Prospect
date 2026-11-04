@@ -17,9 +17,10 @@ const SELECT = "*, ong_contacts(*), ong_partenaires(*), ong_projets(projet_id, r
 
 // Liste allégée : tout ce qu'il faut pour les listes, filtres, carte et
 // statistiques. Les champs longs n'y figurent que sous forme d'indicateur.
-export function useOngList() {
+export function useOngList(enabled = true) {
   return useQuery({
     queryKey: ONG_LIST_KEY,
+    enabled,
     queryFn: async (): Promise<OngListItem[]> => {
       const { data, error } = await supabase.from("ong_liste").select("*").order("nom");
       if (error) throw error;
@@ -205,9 +206,12 @@ export function usePatchOng() {
     onError: (_err, _vars, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
+    // L'écran est déjà à jour (mise à jour optimiste) et le temps réel relance
+    // la lecture une fois : on marque seulement le cache comme périmé, sans
+    // recharger tout de suite (évitait 2 rechargements de ~1 Mo par modification).
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ONG_KEY });
-      queryClient.invalidateQueries({ queryKey: ONG_CONTACTS_KEY });
+      void queryClient.invalidateQueries({ queryKey: ONG_KEY, refetchType: "none" });
+      void queryClient.invalidateQueries({ queryKey: ONG_CONTACTS_KEY, refetchType: "none" });
     },
   });
 }

@@ -22,6 +22,8 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Précharge le code d'une page dès que le lien est survolé : le clic n'attend plus le téléchargement.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
 

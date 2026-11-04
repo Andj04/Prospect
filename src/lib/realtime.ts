@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase-client";
 import {
   AUDIT_LOG_KEY,
@@ -48,39 +49,74 @@ const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
 // avant de recharger une seule fois.
 const DEBOUNCE_MS = 350;
 
+// L'AppShell est monté par chaque page : sans précaution, chaque changement de
+// page fermait puis rouvrait la connexion temps réel sous le même nom. En
+// naviguant vite, la nouvelle connexion retrouvait l'ancienne, pas encore
+// fermée, et plantait (« callbacks après subscribe »). La connexion vit donc au
+// niveau du module : elle survit aux changements de page, porte un nom unique,
+// et ne se ferme qu'après quelques secondes sans aucune page montée.
+const STOP_DELAY_MS = 5000;
+
+let shared: { channel: RealtimeChannel; dispose: () => void } | null = null;
+let mounted = 0;
+let stopTimer: ReturnType<typeof setTimeout> | undefined;
+let counter = 0;
+
+function startSync(queryClient: QueryClient) {
+  const pending = new Map<string, QueryKey>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const flush = () => {
+    timer = undefined;
+    const keys = [...pending.values()];
+    pending.clear();
+    for (const key of keys) void queryClient.invalidateQueries({ queryKey: key });
+  };
+
+  const schedule = (keys: QueryKey[]) => {
+    for (const key of keys) pending.set(JSON.stringify(key), key);
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(flush, DEBOUNCE_MS);
+  };
+
+  const channel = supabase.channel(`db-changes-${++counter}`);
+  for (const table of Object.keys(TABLE_TO_KEYS)) {
+    channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
+      schedule(TABLE_TO_KEYS[table] ?? []);
+    });
+  }
+  channel.subscribe();
+
+  return {
+    channel,
+    dispose: () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(channel);
+    },
+  };
+}
+
 export function useRealtimeSync(enabled: boolean) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!enabled) return;
-
-    const pending = new Map<string, QueryKey>();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    const flush = () => {
-      timer = undefined;
-      const keys = [...pending.values()];
-      pending.clear();
-      for (const key of keys) void queryClient.invalidateQueries({ queryKey: key });
-    };
-
-    const schedule = (keys: QueryKey[]) => {
-      for (const key of keys) pending.set(JSON.stringify(key), key);
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(flush, DEBOUNCE_MS);
-    };
-
-    const channel = supabase.channel("db-changes");
-    for (const table of Object.keys(TABLE_TO_KEYS)) {
-      channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
-        schedule(TABLE_TO_KEYS[table] ?? []);
-      });
+    mounted += 1;
+    if (stopTimer) {
+      clearTimeout(stopTimer);
+      stopTimer = undefined;
     }
-    channel.subscribe();
+    if (!shared) shared = startSync(queryClient);
 
     return () => {
-      if (timer) clearTimeout(timer);
-      void supabase.removeChannel(channel);
+      mounted -= 1;
+      if (mounted > 0) return;
+      stopTimer = setTimeout(() => {
+        if (mounted === 0 && shared) {
+          shared.dispose();
+          shared = null;
+        }
+      }, STOP_DELAY_MS);
     };
   }, [enabled, queryClient]);
 }

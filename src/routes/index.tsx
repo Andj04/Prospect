@@ -152,7 +152,7 @@ function AccueilPage() {
     <AppShell>
       <div className="space-y-6">
         {/* Bandeau d'accueil */}
-        <section className="relative overflow-hidden rounded-2xl bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8 animate-in fade-in zoom-in-95 duration-500">
+        <section className="relative overflow-hidden rounded-2xl bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8 animate-in fade-in duration-150">
           <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-primary/40 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-brand-orange/25 blur-3xl" />
           <img

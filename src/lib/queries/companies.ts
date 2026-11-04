@@ -17,9 +17,10 @@ const SELECT =
 // Liste allégée (~4x moins de données que la version complète) : tout ce qu'il
 // faut pour les listes, filtres, statistiques et cartographie. Les champs longs
 // n'y figurent que sous forme d'indicateur « renseigné ou non ».
-export function useCompaniesList() {
+export function useCompaniesList(enabled = true) {
   return useQuery({
     queryKey: COMPANIES_LIST_KEY,
+    enabled,
     queryFn: async (): Promise<CompanyListItem[]> => {
       const { data, error } = await supabase.from("entreprises_liste").select("*").order("nom");
       if (error) throw error;
@@ -88,20 +89,33 @@ export function useContactsDirectory(enabled = true) {
   });
 }
 
+async function fetchCompany(id: string): Promise<Company | null> {
+  const { data, error } = await supabase
+    .from("entreprises")
+    .select(SELECT)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapCompany(data as EntrepriseRow) : null;
+}
+
 export function useCompany(id: string | undefined) {
   return useQuery({
     queryKey: [...COMPANIES_KEY, id],
     enabled: Boolean(id),
-    queryFn: async (): Promise<Company | null> => {
-      const { data, error } = await supabase
-        .from("entreprises")
-        .select(SELECT)
-        .eq("id", id as string)
-        .maybeSingle();
-      if (error) throw error;
-      return data ? mapCompany(data as EntrepriseRow) : null;
-    },
+    queryFn: () => fetchCompany(id as string),
   });
+}
+
+// Précharge une fiche dès que la souris passe sur « Aperçu » / « Modifier » :
+// le clic trouve alors les données déjà là au lieu d'attendre l'aller-retour réseau.
+export function usePrefetchCompany() {
+  const queryClient = useQueryClient();
+  return (id: string) =>
+    void queryClient.prefetchQuery({
+      queryKey: [...COMPANIES_KEY, id],
+      queryFn: () => fetchCompany(id),
+    });
 }
 
 function toRpcPayload(id: string | null, input: Omit<Company, "id">) {
@@ -211,9 +225,12 @@ export function usePatchEntreprise() {
     onError: (_err, _vars, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
+    // L'écran est déjà à jour (mise à jour optimiste) et le temps réel relance
+    // la lecture une fois : on marque seulement le cache comme périmé, sans
+    // recharger tout de suite (évitait 2 rechargements de ~1 Mo par modification).
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: COMPANIES_KEY });
-      queryClient.invalidateQueries({ queryKey: CONTACTS_KEY });
+      void queryClient.invalidateQueries({ queryKey: COMPANIES_KEY, refetchType: "none" });
+      void queryClient.invalidateQueries({ queryKey: CONTACTS_KEY, refetchType: "none" });
     },
   });
 }

@@ -24,7 +24,7 @@ export function MatrixView({
   );
 
   return (
-    <div className="card-soft themed-scrollbar max-h-[72vh] overflow-auto animate-in fade-in duration-300">
+    <div className="card-soft themed-scrollbar max-h-[72vh] overflow-auto animate-in fade-in duration-150">
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-muted/95 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
           <tr>

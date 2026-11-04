@@ -137,7 +137,11 @@ export function useUpdatePipelineEntry() {
     },
     onMutate: ({ companyId, patch }) => patchCache(companyId, patch),
     onError: (_e, _v, context) => rollback(context),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PIPELINE_KEY }),
+    // L'écran est déjà à jour (mise à jour optimiste) et le temps réel relance
+    // la lecture une fois : on marque seulement le cache comme périmé, sans
+    // recharger tout de suite (évitait 2 rechargements de ~1 Mo par modification).
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: PIPELINE_KEY, refetchType: "none" }),
   });
 }
 

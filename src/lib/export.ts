@@ -1,6 +1,4 @@
-import ExcelJS from "exceljs";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import type ExcelJS from "exceljs";
 import logoAmalBiladi from "@/assets/logo-amal-biladi.png";
 import { BONUS_CHECKS, REQUIRED_CHECKS, missingRequired } from "@/lib/completeness";
 import {
@@ -97,6 +95,11 @@ export async function exportCompanyToPdf({
   pipeline?: PipelineItem | undefined;
 }) {
   const { projetName, sousComposante } = makeLookups(projets, sousComposantes);
+  // Chargé à la demande : jsPDF et ses plugins pèsent lourd et ne servent qu'ici.
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -493,7 +496,8 @@ export async function exportCompaniesToExcel(
       (groups.has(c.group as ColumnGroup) && !(c.key === "contacts" && !contactsInCell)),
   );
 
-  const workbook = new ExcelJS.Workbook();
+  const { default: Excel } = await import("exceljs");
+  const workbook = new Excel.Workbook();
   workbook.creator = "Amal Biladi — Base de prospection RSE";
   workbook.created = new Date();
 

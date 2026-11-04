@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-// Anime un nombre de sa valeur précédente vers la nouvelle (ease-out, ~700 ms).
+// Anime un nombre de sa valeur précédente vers la nouvelle (ease-out, ~250 ms).
 // Respecte « réduire les animations » : la valeur s'affiche alors directement.
-export function useCountUp(target: number, duration = 700) {
+export function useCountUp(target: number, duration = 250) {
   const [value, setValue] = useState(0);
   const from = useRef(0);
 

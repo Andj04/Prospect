@@ -155,7 +155,7 @@ export function ProjectBoardView({
   return (
     <div
       ref={boardRef}
-      className="themed-scrollbar flex snap-x gap-3 overflow-x-auto pb-3 animate-in fade-in duration-300"
+      className="themed-scrollbar flex snap-x gap-3 overflow-x-auto pb-3 animate-in fade-in duration-150"
     >
       {columns.map((col) => (
         <ProjectColumn

@@ -14,7 +14,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 animate-in fade-in slide-in-from-bottom-1 duration-300">
+    <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
         <h1 className="text-3xl font-extrabold tracking-tight text-primary-deep text-balance dark:text-foreground">
           {title}

@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -14,6 +15,10 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "../lib/auth/AuthProvider";
 import { useTheme } from "@/lib/preferences";
 import { Toaster } from "../components/ui/sonner";
+import { PersistentShell } from "../components/AppShell";
+
+// Pages publiques, affichées hors du cadre de l'application.
+const PAGES_SANS_CADRE = ["/connexion", "/mot-de-passe-oublie", "/nouveau-mot-de-passe"];
 
 function NotFoundComponent() {
   return (
@@ -135,12 +140,20 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useTheme();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const sansCadre = PAGES_SANS_CADRE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        {sansCadre ? (
+          <Outlet />
+        ) : (
+          <PersistentShell>
+            <Outlet />
+          </PersistentShell>
+        )}
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>

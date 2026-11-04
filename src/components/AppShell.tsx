@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
   BellRing,
@@ -414,7 +414,27 @@ function ShellSkeleton() {
   );
 }
 
+// Le cadre (menu, en-tête, recherche, temps réel) est monté une seule fois à la
+// racine (voir routes/__root.tsx). Les pages continuent d'écrire <AppShell> :
+// à l'intérieur du cadre persistant, ce composant ne fait que laisser passer le
+// contenu. Ainsi un changement de page ne reconstruit plus tout le menu.
+const ShellContext = createContext(false);
+
 export function AppShell({ children }: { children: ReactNode }) {
+  const insidePersistentShell = useContext(ShellContext);
+  if (insidePersistentShell) return <>{children}</>;
+  return <ShellFrame>{children}</ShellFrame>;
+}
+
+export function PersistentShell({ children }: { children: ReactNode }) {
+  return (
+    <ShellContext.Provider value>
+      <ShellFrame>{children}</ShellFrame>
+    </ShellContext.Provider>
+  );
+}
+
+function ShellFrame({ children }: { children: ReactNode }) {
   const { loading, session, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -478,7 +498,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <PasswordChangeBanner />
         <main
           key={pathname}
-          className="mx-auto w-full max-w-[1600px] px-4 py-6 animate-in fade-in slide-in-from-bottom-1 duration-300 motion-reduce:animate-none lg:px-8 lg:py-8"
+          className="mx-auto w-full max-w-[1600px] px-4 py-6 animate-in fade-in duration-150 motion-reduce:animate-none lg:px-8 lg:py-8"
         >
           {children}
         </main>

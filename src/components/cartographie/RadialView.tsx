@@ -117,7 +117,7 @@ export function RadialView({
   const half = tree.r2 + fontSize * 20;
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-300">
+    <div className="space-y-3 animate-in fade-in duration-150">
       <div className="flex flex-wrap gap-1.5">
         {projets.map((p) => (
           <button

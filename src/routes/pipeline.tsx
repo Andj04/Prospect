@@ -410,7 +410,7 @@ function PipelinePage() {
         </div>
 
         {view === "kanban" ? (
-          <div className="themed-scrollbar flex gap-3 overflow-x-auto pb-3 animate-in fade-in duration-300">
+          <div className="themed-scrollbar flex gap-3 overflow-x-auto pb-3 animate-in fade-in duration-150">
             {STATUTS.map((col) => {
               const items = rows
                 .filter((p) => p.statut === col.value)
@@ -475,7 +475,7 @@ function PipelinePage() {
             })}
           </div>
         ) : (
-          <div className="card-soft themed-scrollbar overflow-x-auto animate-in fade-in duration-300">
+          <div className="card-soft themed-scrollbar overflow-x-auto animate-in fade-in duration-150">
             <table className="w-full min-w-[1000px] border-collapse text-sm">
               <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>

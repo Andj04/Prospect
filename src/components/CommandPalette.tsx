@@ -29,10 +29,10 @@ export function CommandPalette({
   pages: PaletteLink[];
 }) {
   const navigate = useNavigate();
-  const { data: companies = [] } = useCompaniesList();
+  const { data: companies = [] } = useCompaniesList(open);
   // L'annuaire n'est chargé qu'à l'ouverture de la palette.
   const { data: contacts = [] } = useContactsDirectory(open);
-  const { data: ongs = [] } = useOngList();
+  const { data: ongs = [] } = useOngList(open);
   const { data: ongContacts = [] } = useOngContactsDirectory(open);
   const { data: projets = [] } = useProjects();
 

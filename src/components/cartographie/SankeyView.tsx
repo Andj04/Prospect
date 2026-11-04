@@ -206,7 +206,7 @@ export function SankeyView({
   const isActive = (l: Link) => !hover || l.source === hover || l.target === hover;
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-300">
+    <div className="space-y-3 animate-in fade-in duration-150">
       <p className="text-xs text-muted-foreground">
         {layout.total} liens entreprise-projet. Survolez un pays, un secteur ou un projet pour
         isoler ses flux ; cliquez sur un flux pour ouvrir les entreprises concernées.
