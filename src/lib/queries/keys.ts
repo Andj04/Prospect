@@ -15,3 +15,4 @@ export const ONG_KEY = ["ong"] as const;
 export const ONG_LIST_KEY = ["ong", "liste"] as const;
 export const ONG_CONTACTS_KEY = ["ong-contacts"] as const;
 export const PIPELINE_ONG_KEY = ["pipeline-ong"] as const;
+export const PROSPECTION_KEY = ["prospection"] as const;

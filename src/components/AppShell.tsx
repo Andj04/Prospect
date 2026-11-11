@@ -21,6 +21,7 @@ import {
   Network,
   Plus,
   Search,
+  Send,
   Star,
   Sun,
   User,
@@ -78,6 +79,7 @@ const HOME_NAV: NavEntry[] = [{ to: "/", label: "Accueil", icon: Home, group: "A
 const PROSPECTION_NAV: NavEntry[] = [
   { to: "/entreprises", label: "Entreprises", icon: Building2, group: "Prospection" },
   { to: "/contacts", label: "Contacts", icon: UsersRound, group: "Prospection" },
+  { to: "/prospection", label: "Campagne de contact", icon: Send, group: "Prospection" },
   { to: "/pipeline", label: "Pipeline", icon: GitBranch, group: "Prospection" },
   { to: "/relances", label: "Relances", icon: BellRing, group: "Prospection" },
 ];

@@ -138,7 +138,10 @@ function toRpcPayload(id: string | null, input: Omit<Company, "id">) {
     p_pourquoi_proposition: input.propositionConcrete ?? "",
     p_exclue: input.exclue,
     p_raison_exclusion: input.raisonExclusion ?? "",
+    // L'identifiant permet à save_entreprise() de mettre à jour le contact au
+    // lieu de le recréer (le suivi de prospection lui est rattaché).
     p_contacts: input.contacts.map((c) => ({
+      id: c.id,
       fonction: c.fonction,
       nom: c.nom,
       linkedin: c.linkedin ?? "",

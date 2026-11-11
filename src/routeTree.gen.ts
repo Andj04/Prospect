@@ -22,6 +22,7 @@ import { Route as NouveauMotDePasseRouteImport } from './routes/nouveau-mot-de-p
 import { Route as PasserellesRouteImport } from './routes/passerelles'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ProjetsRouteImport } from './routes/projets'
+import { Route as ProspectionRouteImport } from './routes/prospection'
 import { Route as RelancesRouteImport } from './routes/relances'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
@@ -101,6 +102,11 @@ const PipelineRoute = PipelineRouteImport.update({
 const ProjetsRoute = ProjetsRouteImport.update({
   id: '/projets',
   path: '/projets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProspectionRoute = ProspectionRouteImport.update({
+  id: '/prospection',
+  path: '/prospection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RelancesRoute = RelancesRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/prospection': typeof ProspectionRoute
   '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/prospection': typeof ProspectionRoute
   '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/passerelles': typeof PasserellesRoute
   '/pipeline': typeof PipelineRoute
   '/projets': typeof ProjetsRoute
+  '/prospection': typeof ProspectionRoute
   '/relances': typeof RelancesRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/passerelles'
     | '/pipeline'
     | '/projets'
+    | '/prospection'
     | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/passerelles'
     | '/pipeline'
     | '/projets'
+    | '/prospection'
     | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/passerelles'
     | '/pipeline'
     | '/projets'
+    | '/prospection'
     | '/relances'
     | '/tableau-de-bord'
     | '/utilisateurs'
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   PasserellesRoute: typeof PasserellesRoute
   PipelineRoute: typeof PipelineRoute
   ProjetsRoute: typeof ProjetsRoute
+  ProspectionRoute: typeof ProspectionRoute
   RelancesRoute: typeof RelancesRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   UtilisateursRoute: typeof UtilisateursRoute
@@ -485,6 +498,13 @@ declare module '@tanstack/react-router' {
       path: '/projets'
       fullPath: '/projets'
       preLoaderRoute: typeof ProjetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prospection': {
+      id: '/prospection'
+      path: '/prospection'
+      fullPath: '/prospection'
+      preLoaderRoute: typeof ProspectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/relances': {
@@ -609,6 +629,7 @@ const rootRouteChildren: RootRouteChildren = {
   PasserellesRoute: PasserellesRoute,
   PipelineRoute: PipelineRoute,
   ProjetsRoute: ProjetsRoute,
+  ProspectionRoute: ProspectionRoute,
   RelancesRoute: RelancesRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   UtilisateursRoute: UtilisateursRoute,

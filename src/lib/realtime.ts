@@ -13,6 +13,7 @@ import {
   ONG_LIST_KEY,
   PIPELINE_KEY,
   PIPELINE_ONG_KEY,
+  PROSPECTION_KEY,
   PROJETS_KEY,
   USERS_KEY,
 } from "@/lib/queries/keys";
@@ -27,7 +28,9 @@ const ONG_KEYS: QueryKey[] = [ONG_KEY, ONG_LIST_KEY];
 
 const TABLE_TO_KEYS: Record<string, QueryKey[]> = {
   entreprises: COMPANY_KEYS,
-  entreprise_contacts: [...COMPANY_KEYS, CONTACTS_KEY],
+  entreprise_contacts: [...COMPANY_KEYS, CONTACTS_KEY, PROSPECTION_KEY],
+  prospection_contacts: [PROSPECTION_KEY],
+  prospection_historique: [PROSPECTION_KEY],
   entreprise_projets: COMPANY_KEYS,
   pipeline: [PIPELINE_KEY],
   pipeline_historique: [PIPELINE_KEY],
