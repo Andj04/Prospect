@@ -38,6 +38,14 @@ const norm = (s) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+// Identité d'une personne : nom sans titre de civilité ni description ajoutée
+// (« Axel d'Hauthuille, Directeur Général » ou « Imad Toumi (PDG) » -> même clé).
+const personKey = (s) =>
+  norm(String(s ?? "").split(/\s[—–-]\s|\(|,/)[0])
+    .replace(/\b(dr|mme|mr|m|pr)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const cellText = (v) => {
   if (v == null) return "";
   if (typeof v === "object") {
@@ -210,7 +218,7 @@ async function main() {
     const existing = contacts.find(
       (c) =>
         c.entreprise_id === e.id &&
-        ((slug && linkedinSlug(c.linkedin) === slug) || norm(c.nom) === norm(nom)),
+        ((slug && linkedinSlug(c.linkedin) === slug) || personKey(c.nom) === personKey(nom)),
     );
 
     let contactId;
