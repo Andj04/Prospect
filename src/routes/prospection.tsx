@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/page-header";
 import { DetailsSheet } from "@/components/prospection/DetailsSheet";
 import { ModelesDialog } from "@/components/prospection/ModelesDialog";
 import { ReponseDialog } from "@/components/prospection/ReponseDialog";
+import { ContactsEntreprise } from "@/components/prospection/ContactsEntreprise";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,10 @@ import { todayIso } from "@/lib/pipeline-utils";
 import {
   CANAUX,
   CATEGORIES_POSTE,
+  clePersonne,
+  resumeContacts,
+  typeContact,
+  type ContactCampagne,
   ETAPES_LINKEDIN,
   ETAPE_SUIVANTE,
   REPONSES_PARTAGEES,
@@ -62,6 +67,7 @@ import {
 import { usePipeline } from "@/lib/queries/pipeline";
 import {
   useAssignerContacts,
+  useContactsCampagne,
   useProspection,
   useUpdateProspection,
 } from "@/lib/queries/prospection";
@@ -301,6 +307,7 @@ function ProspectionPage() {
   const { data: items = [], isLoading } = useProspection(canal);
   const { data: pipeline = [] } = usePipeline();
   const { data: users = [] } = useUsers();
+  const { data: contacts = [] } = useContactsCampagne();
   const update = useUpdateProspection();
   const assigner = useAssignerContacts();
 
@@ -380,6 +387,65 @@ function ProspectionPage() {
     return m;
   }, [items]);
 
+  // Base de contacts : une personne compte une fois même si elle figure dans
+  // plusieurs entreprises ; les canaux génériques (contact@, standard,
+  // contact de la fondation) sont comptés à part.
+  const bilan = useMemo(() => {
+    const personnes = new Set<string>();
+    let fichesPersonnes = 0;
+    let generiques = 0;
+    let linkedin = 0;
+    let email = 0;
+    let telephone = 0;
+    const entreprises = new Set<string>();
+    for (const c of contacts) {
+      entreprises.add(c.entrepriseId);
+      if (typeContact(c) === "personne") {
+        fichesPersonnes++;
+        personnes.add(clePersonne(c));
+      } else generiques++;
+      if (c.linkedin) linkedin++;
+      if (c.email) email++;
+      if (c.telephone) telephone++;
+    }
+    return {
+      personnes: personnes.size,
+      fichesPersonnes,
+      generiques,
+      linkedin,
+      email,
+      telephone,
+      entreprises: entreprises.size,
+    };
+  }, [contacts]);
+
+  const contactsParEntreprise = useMemo(() => {
+    const m = new Map<string, ContactCampagne[]>();
+    for (const c of contacts) m.set(c.entrepriseId, [...(m.get(c.entrepriseId) ?? []), c]);
+    return m;
+  }, [contacts]);
+
+  // Entreprises où figure chaque personne (même LinkedIn ou même nom).
+  const entreprisesParPersonne = useMemo(() => {
+    const m = new Map<string, Map<string, string>>();
+    for (const c of contacts) {
+      if (typeContact(c) !== "personne") continue;
+      const k = clePersonne(c);
+      const ents = m.get(k) ?? new Map<string, string>();
+      ents.set(c.entrepriseId, c.entrepriseNom);
+      m.set(k, ents);
+    }
+    return m;
+  }, [contacts]);
+  const aussiChez = useCallback(
+    (c: ContactCampagne) =>
+      [...(entreprisesParPersonne.get(clePersonne(c)) ?? new Map<string, string>())]
+        .filter(([id]) => id !== c.entrepriseId)
+        .map(([, nom]) => nom),
+    [entreprisesParPersonne],
+  );
+  const enCampagne = useMemo(() => new Set(items.map((p) => p.contact.id)), [items]);
+
   const groupes = useMemo(() => {
     const m = new Map<string, ProspectionItem[]>();
     for (const p of visibles) m.set(p.entreprise.id, [...(m.get(p.entreprise.id) ?? []), p]);
@@ -448,6 +514,35 @@ function ProspectionPage() {
           title="Prospection"
           description="Suivi contact par contact : invitation, message, relances et réponse. Une réponse favorable est visible par toute l'équipe sur les autres contacts de l'entreprise."
         />
+
+        {contacts.length > 0 && (
+          <div className="card-soft grid grid-cols-2 gap-x-4 gap-y-2 p-3 text-sm sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              {
+                n: bilan.personnes,
+                label: "personnes",
+                hint:
+                  bilan.fichesPersonnes > bilan.personnes
+                    ? `${bilan.fichesPersonnes - bilan.personnes} présentes dans plusieurs entreprises`
+                    : undefined,
+              },
+              {
+                n: bilan.generiques,
+                label: "contacts génériques",
+                hint: "contact de l'entreprise, de la fondation, standard",
+              },
+              { n: bilan.linkedin, label: "avec LinkedIn" },
+              { n: bilan.email, label: "avec e-mail" },
+              { n: bilan.telephone, label: "avec téléphone" },
+              { n: bilan.entreprises, label: "entreprises" },
+            ].map((s) => (
+              <div key={s.label} title={s.hint}>
+                <span className="block text-lg font-bold tabular-nums">{s.n}</span>
+                <span className="text-xs text-muted-foreground">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-1.5">
           {CANAUX.map((c) => (
@@ -596,6 +691,9 @@ function ProspectionPage() {
                 pl={g.pl}
                 list={g.list}
                 tous={parEntreprise.get(g.id) ?? []}
+                contacts={contactsParEntreprise.get(g.id) ?? []}
+                enCampagne={enCampagne}
+                aussiChez={aussiChez}
                 isAdmin={isAdmin}
                 responsables={responsables}
                 onChange={change}
@@ -688,6 +786,9 @@ function EntrepriseGroupe({
   pl,
   list,
   tous,
+  contacts,
+  enCampagne,
+  aussiChez,
   isAdmin,
   responsables,
   onChange,
@@ -701,6 +802,9 @@ function EntrepriseGroupe({
   pl: PipelineItem | undefined;
   list: ProspectionItem[];
   tous: ProspectionItem[];
+  contacts: ContactCampagne[];
+  enCampagne: Set<string>;
+  aussiChez: (c: ContactCampagne) => string[];
   isAdmin: boolean;
   responsables: string[];
   onChange: (
@@ -717,7 +821,8 @@ function EntrepriseGroupe({
   const actifsNonPause = tous.filter(
     (p) => !p.enPause && !TERMINEES.includes(p.etape) && !partagees.includes(p),
   );
-  const generique = list[0]?.entreprise.contactGenerique;
+  const generique = list[0]?.entreprise.contactGenerique ?? "";
+  const [infos, setInfos] = useState(false);
 
   return (
     <section className="card-soft overflow-hidden">
@@ -728,18 +833,29 @@ function EntrepriseGroupe({
         {pl && <PrioriteBadge priorite={pl.priorite} />}
         {pl && <StatutBadge statut={pl.statut} />}
         <span className="text-xs text-muted-foreground">
-          {list.length} contact{list.length > 1 ? "s" : ""}
+          {resumeContacts(contacts, generique)} · {list.length} en campagne
           {tous.length > list.length && ` affiché${list.length > 1 ? "s" : ""} sur ${tous.length}`}
         </span>
-        {generique && (
-          <span
-            title={generique}
-            className="ml-auto max-w-xs truncate text-xs text-muted-foreground"
-          >
-            Canal générique : {generique.split("\n")[0]}
-          </span>
-        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto h-7 text-xs"
+          aria-expanded={infos}
+          onClick={() => setInfos((v) => !v)}
+        >
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", infos && "rotate-180")} />
+          Contacts et coordonnées
+        </Button>
       </header>
+
+      {infos && (
+        <ContactsEntreprise
+          contacts={contacts}
+          canalGenerique={generique}
+          enCampagne={enCampagne}
+          aussiChez={aussiChez}
+        />
+      )}
 
       {partagees.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 border-b border-success/30 bg-success/10 px-3 py-2 text-sm">

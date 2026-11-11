@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase-client";
 import type {
   Canal,
   CategoriePoste,
+  ContactCampagne,
   EtapeLinkedin,
   ProspectionHistoriqueEntry,
   ProspectionItem,
@@ -117,6 +118,54 @@ export function useProspection(canal: Canal) {
         if (data.length < 1000) break;
       }
       return all.filter((r) => !r.contact.entreprise.exclue).map(mapRow);
+    },
+  });
+}
+
+/** Tous les contacts des entreprises (personnes et canaux génériques), avec ou sans suivi. */
+export function useContactsCampagne() {
+  return useQuery({
+    queryKey: [...PROSPECTION_KEY, "contacts"],
+    queryFn: async (): Promise<ContactCampagne[]> => {
+      type ContactRow = {
+        id: string;
+        entreprise_id: string;
+        nom: string;
+        poste: string;
+        remarque: string;
+        responsable: string;
+        linkedin: string | null;
+        email: string | null;
+        telephone: string | null;
+        entreprise: { nom: string; exclue: boolean };
+      };
+      const all: ContactRow[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase
+          .from("entreprise_contacts")
+          .select(
+            "id, entreprise_id, nom, poste, remarque, responsable, linkedin, email, telephone, entreprise:entreprises!inner(nom, exclue)",
+          )
+          .order("id")
+          .range(from, from + 999);
+        if (error) throw error;
+        all.push(...(data as unknown as ContactRow[]));
+        if (data.length < 1000) break;
+      }
+      return all
+        .filter((r) => !r.entreprise.exclue)
+        .map((r) => ({
+          id: r.id,
+          entrepriseId: r.entreprise_id,
+          entrepriseNom: r.entreprise.nom,
+          nom: r.nom.trim(),
+          poste: r.poste,
+          remarque: r.remarque,
+          responsable: r.responsable,
+          ...(r.linkedin ? { linkedin: r.linkedin } : {}),
+          ...(r.email ? { email: r.email } : {}),
+          ...(r.telephone ? { telephone: r.telephone } : {}),
+        }));
     },
   });
 }

@@ -144,6 +144,68 @@ export function prenomDe(nom: string) {
 
 const normaliser = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
+// ----------------------------------------------------------------------------
+// Contacts d'une entreprise : personne ou canal générique
+// ----------------------------------------------------------------------------
+
+/** Un contact tel que la campagne l'affiche dans la fiche d'une entreprise. */
+export type ContactCampagne = {
+  id: string;
+  entrepriseId: string;
+  entrepriseNom: string;
+  nom: string;
+  poste: string;
+  remarque: string;
+  responsable: string;
+  linkedin?: string;
+  email?: string;
+  telephone?: string;
+};
+
+export type TypeContact = "personne" | "entreprise" | "fondation";
+
+export const TYPE_CONTACT_LABEL: Record<TypeContact, string> = {
+  personne: "Personne",
+  entreprise: "Contact de l'entreprise",
+  fondation: "Contact de la fondation",
+};
+
+const GENERIQUE = /^(contact|service|standard|accueil|secr[ée]tariat|direction|siège|siege)\b/i;
+
+/** Personne nommée, ou canal générique (contact@, standard…) de l'entreprise ou de sa fondation. */
+export function typeContact(c: Pick<ContactCampagne, "nom">): TypeContact {
+  const nom = c.nom.trim();
+  if (nom && !GENERIQUE.test(nom)) return "personne";
+  return /fondation/i.test(nom) ? "fondation" : "entreprise";
+}
+
+/** Résumé des contacts d'une entreprise : « 3 personnes · 1 contact générique ». */
+export function resumeContacts(contacts: Pick<ContactCampagne, "nom">[], canalGenerique: string) {
+  let personnes = 0;
+  let generiques = 0;
+  for (const c of contacts) {
+    if (typeContact(c) === "personne") personnes++;
+    else generiques++;
+  }
+  // Canaux génériques saisis seulement au niveau de l'entreprise (contact@…).
+  const n = generiques + (canalGenerique.trim() && generiques === 0 ? 1 : 0);
+  const parts = [`${personnes} personne${personnes > 1 ? "s" : ""}`];
+  if (n > 0) parts.push(`${n} contact${n > 1 ? "s" : ""} générique${n > 1 ? "s" : ""}`);
+  return parts.join(" · ");
+}
+
+/** Identité d'une personne : son profil LinkedIn, sinon son nom sans titre ni description. */
+export function clePersonne(c: Pick<ContactCampagne, "nom" | "linkedin">): string {
+  const slug = c.linkedin?.toLowerCase().match(/linkedin\.com\/in\/([^/?#]+)/)?.[1];
+  if (slug) return `li:${decodeURIComponent(slug).replace(/\/$/, "")}`;
+  const base = normaliser(c.nom.split(/\s[—–-]\s|\(|,/)[0] ?? "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(dr|mme|mr|m|pr)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return `nom:${base}`;
+}
+
 /** Le contact est-il assigné à cet utilisateur (par compte, sinon par prénom) ? */
 export function estAssigneA(
   p: ProspectionItem,
