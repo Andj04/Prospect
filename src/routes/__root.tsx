@@ -42,10 +42,34 @@ function NotFoundComponent() {
   );
 }
 
+// Après un nouveau déploiement, un onglet resté ouvert réclame des fichiers de
+// l'ancienne version qui n'existent plus (404). On recharge alors la page une
+// fois pour récupérer la nouvelle version, sans boucler si l'erreur persiste.
+const CHUNK_ERROR =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i;
+
+function isChunkError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return CHUNK_ERROR.test(message);
+}
+
+function reloadForNewVersion() {
+  try {
+    const last = Number(sessionStorage.getItem("chunk-reload-at") ?? 0);
+    if (Date.now() - last < 10_000) return false;
+    sessionStorage.setItem("chunk-reload-at", String(Date.now()));
+  } catch {
+    // Stockage indisponible : on recharge quand même, une seule fois par erreur.
+  }
+  window.location.reload();
+  return true;
+}
+
 function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
+    if (isChunkError(error) && reloadForNewVersion()) return;
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
@@ -142,6 +166,15 @@ function RootComponent() {
   useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const sansCadre = PAGES_SANS_CADRE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  // Vite signale lui-même l'échec de préchargement d'un fichier : même remède.
+  useEffect(() => {
+    const onPreloadError = (event: Event) => {
+      if (reloadForNewVersion()) event.preventDefault();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
