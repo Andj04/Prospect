@@ -153,8 +153,11 @@ export type ContactCampagne = {
   id: string;
   entrepriseId: string;
   entrepriseNom: string;
+  /** Canaux génériques saisis sur l'entreprise (contact@…). */
+  entrepriseGenerique: string;
   nom: string;
   poste: string;
+  categoriePoste: string;
   remarque: string;
   responsable: string;
   linkedin?: string;
@@ -213,6 +216,16 @@ export function estAssigneA(
 ) {
   if (!profile) return false;
   if (p.contact.responsableId) return p.contact.responsableId === profile.id;
-  const prenom = normaliser(profile.fullName.split(" ")[0] ?? "");
-  return Boolean(prenom) && normaliser(p.contact.responsable) === prenom;
+  return nomDesigneCompte(p.contact.responsable, profile.fullName);
+}
+
+/**
+ * Le nom court d'un responsable désigne-t-il ce compte ? Le fichier utilise un
+ * seul nom (« Serge »), le compte peut l'avoir en prénom ou en nom (« Zola Serge »).
+ */
+export function nomDesigneCompte(nom: string, nomComplet: string) {
+  const n = normaliser(nom);
+  if (!n) return false;
+  const complet = normaliser(nomComplet);
+  return complet === n || complet.split(/\s+/).includes(n);
 }

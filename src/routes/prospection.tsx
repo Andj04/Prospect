@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
+  Building2,
   ChevronDown,
   Info,
   Linkedin,
@@ -21,6 +22,8 @@ import { DetailsSheet } from "@/components/prospection/DetailsSheet";
 import { ModelesDialog } from "@/components/prospection/ModelesDialog";
 import { ReponseDialog } from "@/components/prospection/ReponseDialog";
 import { ContactsEntreprise } from "@/components/prospection/ContactsEntreprise";
+import { FicheEntrepriseSheet } from "@/components/prospection/FicheEntrepriseSheet";
+import { ProspectionExportDialog } from "@/components/prospection/ProspectionExportDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +61,7 @@ import {
   categorieLabel,
   derniereDate,
   estAssigneA,
+  nomDesigneCompte,
   reponseLabel,
   type Canal,
   type EtapeLinkedin,
@@ -239,19 +243,6 @@ const ContactRow = memo(function ContactRow({
             {reponseLabel(p.reponse)}
           </span>
         )}
-        <label className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          Prochaine action
-          <input
-            type="date"
-            key={p.prochaineActionDate ?? ""}
-            defaultValue={p.prochaineActionDate ?? ""}
-            onBlur={(e) =>
-              (e.target.value || null) !== (p.prochaineActionDate ?? null) &&
-              onChange(p, { prochaineActionDate: e.target.value || null })
-            }
-            className="h-7 rounded border border-input bg-background px-1 text-[11px]"
-          />
-        </label>
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-1">
@@ -320,6 +311,7 @@ function ProspectionPage() {
   const [limit, setLimit] = useState(GROUPES_PAR_PAGE);
   const [dialogue, setDialogue] = useState<Dialogue>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [ficheId, setFicheId] = useState<string | null>(null);
   const [pause, setPause] = useState<{ entreprise: string; ids: string[]; motif: string } | null>(
     null,
   );
@@ -327,10 +319,13 @@ function ProspectionPage() {
   const today = todayIso();
   const pipelineById = useMemo(() => new Map(pipeline.map((p) => [p.companyId, p])), [pipeline]);
 
-  // Responsables proposés : ceux du fichier + les comptes du site (prénom).
+  // Responsables proposés : ceux du fichier + les comptes du site qui n'y sont
+  // pas déjà (« Serge » désigne déjà le compte « Zola Serge » : pas de doublon).
   const responsables = useMemo(() => {
     const s = new Set(items.map((p) => p.contact.responsable).filter(Boolean));
+    const noms = [...s];
     for (const u of users) {
+      if (noms.some((n) => nomDesigneCompte(n, u.nomComplet))) continue;
       const prenom = u.nomComplet.split(" ")[0];
       if (prenom) s.add(prenom);
     }
@@ -470,9 +465,7 @@ function ProspectionPage() {
     );
 
   const assign = (p: ProspectionItem, nom: string) => {
-    const matches = users.filter(
-      (u) => normaliser(u.nomComplet.split(" ")[0] ?? "") === normaliser(nom),
-    );
+    const matches = users.filter((u) => nomDesigneCompte(nom, u.nomComplet));
     assigner.mutate(
       {
         contactIds: [p.contact.id],
@@ -513,6 +506,15 @@ function ProspectionPage() {
         <PageHeader
           title="Prospection"
           description="Suivi contact par contact : invitation, message, relances et réponse. Une réponse favorable est visible par toute l'équipe sur les autres contacts de l'entreprise."
+          actions={
+            <ProspectionExportDialog
+              affiches={visibles}
+              campagne={items}
+              contacts={contacts}
+              pipelineById={pipelineById}
+              responsables={responsables}
+            />
+          }
         />
 
         {contacts.length > 0 && (
@@ -701,6 +703,7 @@ function ProspectionPage() {
                 onDialog={setDialogue}
                 onDetails={(p) => setDetailsId(p.id)}
                 onPauseAutres={(ids, motif) => setPause({ entreprise: g.nom, ids, motif })}
+                onFiche={() => setFicheId(g.id)}
               />
             ))}
             {groupes.length > limit && (
@@ -744,6 +747,11 @@ function ProspectionPage() {
         />
       )}
       <DetailsSheet item={details} onOpenChange={(o) => !o && setDetailsId(null)} />
+      <FicheEntrepriseSheet
+        entrepriseId={ficheId}
+        pipeline={ficheId ? pipelineById.get(ficheId) : undefined}
+        onOpenChange={(o) => !o && setFicheId(null)}
+      />
 
       <AlertDialog open={Boolean(pause)} onOpenChange={(o) => !o && setPause(null)}>
         <AlertDialogContent>
@@ -796,6 +804,7 @@ function EntrepriseGroupe({
   onDialog,
   onDetails,
   onPauseAutres,
+  onFiche,
 }: {
   id: string;
   nom: string;
@@ -815,6 +824,7 @@ function EntrepriseGroupe({
   onDialog: (d: Dialogue) => void;
   onDetails: (p: ProspectionItem) => void;
   onPauseAutres: (ids: string[], motif: string) => void;
+  onFiche: () => void;
 }) {
   // Réponses utiles obtenues dans l'entreprise, tous responsables confondus.
   const partagees = tous.filter((p) => p.reponse && REPONSES_PARTAGEES.includes(p.reponse));
@@ -836,10 +846,14 @@ function EntrepriseGroupe({
           {resumeContacts(contacts, generique)} · {list.length} en campagne
           {tous.length > list.length && ` affiché${list.length > 1 ? "s" : ""} sur ${tous.length}`}
         </span>
+        <Button size="sm" variant="ghost" className="ml-auto h-7 text-xs" onClick={onFiche}>
+          <Building2 className="h-3.5 w-3.5" />
+          Fiche de l'entreprise
+        </Button>
         <Button
           size="sm"
           variant="ghost"
-          className="ml-auto h-7 text-xs"
+          className="h-7 text-xs"
           aria-expanded={infos}
           onClick={() => setInfos((v) => !v)}
         >

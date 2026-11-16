@@ -149,7 +149,8 @@ async function main() {
   const findProfile = (prenom) => {
     const n = norm(prenom);
     if (!n) return undefined;
-    const m = profiles.filter((p) => norm(p.full_name).split(" ")[0] === n);
+    // Prénom ou nom du compte : « Serge » désigne « Zola Serge ».
+    const m = profiles.filter((p) => norm(p.full_name).split(" ").includes(n));
     return m.length === 1 ? m[0] : undefined;
   };
 
