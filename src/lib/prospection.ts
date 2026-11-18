@@ -132,6 +132,50 @@ export function derniereDate(p: ProspectionItem): string | undefined {
     .pop();
 }
 
+export type Civilite = "monsieur" | "madame";
+
+const TITRES = /^(dr\.?|pr\.?|m\.|mr\.?|mme\.?|mlle\.?|madame|monsieur)$/i;
+
+/** Civilité écrite dans le nom (« Mme Zineb Bennouna »), sinon rien. */
+export function civiliteDuNom(nom: string): Civilite | undefined {
+  const premier = nom.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+  if (/^(mme\.?|madame|mlle\.?)$/.test(premier)) return "madame";
+  if (/^(m\.|mr\.?|monsieur)$/.test(premier)) return "monsieur";
+  return undefined;
+}
+
+/**
+ * Nom de famille pour « Bonjour Monsieur … » : tout ce qui suit le prénom, sans
+ * titre ni description (« Dr Lamia Tazi » -> « Tazi », « Mohamed EL HARIRI —
+ * CEO » -> « El Hariri », « Meryem Nazih Cherkaoui » -> « Nazih Cherkaoui »).
+ */
+export function nomDeFamille(nom: string) {
+  const mots = (nom.split(/\s[—–-]\s|\(|,/)[0] ?? "")
+    .replace(/\.$/, "")
+    .trim()
+    .split(/\s+/)
+    .filter((m) => m && !TITRES.test(m));
+  const famille = mots.length > 1 ? mots.slice(1) : mots;
+  return famille
+    .map((m) =>
+      m === m.toUpperCase() && m.length > 1
+        ? m.charAt(0) +
+          m
+            .slice(1)
+            .toLowerCase()
+            .replace(/([-'][a-zà-ÿ])/g, (x) => x.toUpperCase())
+        : m,
+    )
+    .join(" ");
+}
+
+/** « Monsieur Belkhayat » / « Madame Tazi » (vide tant que la civilité n'est pas connue). */
+export function salutationDe(nom: string, civilite: Civilite | undefined) {
+  if (!civilite) return "";
+  const famille = nomDeFamille(nom);
+  return `${civilite === "madame" ? "Madame" : "Monsieur"}${famille ? ` ${famille}` : ""}`;
+}
+
 /** Prénom pour les modèles de message (« Dr Lamia Tazi » -> « Lamia »). */
 export function prenomDe(nom: string) {
   const mots = nom

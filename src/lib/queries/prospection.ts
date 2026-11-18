@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase-client";
 import type {
   Canal,
   CategoriePoste,
+  Civilite,
   ContactCampagne,
   EtapeLinkedin,
   ProspectionHistoriqueEntry,
@@ -169,6 +170,59 @@ export function useContactsCampagne() {
           ...(r.email ? { email: r.email } : {}),
           ...(r.telephone ? { telephone: r.telephone } : {}),
         }));
+    },
+  });
+}
+
+const CIVILITES_KEY = [...PROSPECTION_KEY, "civilites"] as const;
+
+/**
+ * Civilité de chaque contact (Monsieur / Madame), par identifiant de contact.
+ * Lue à part : tant que la migration 0015 n'est pas passée, la colonne
+ * n'existe pas et la page doit continuer à fonctionner (carte vide).
+ */
+export function useCivilites() {
+  return useQuery({
+    queryKey: CIVILITES_KEY,
+    queryFn: async (): Promise<{ disponible: boolean; parContact: Map<string, Civilite> }> => {
+      const parContact = new Map<string, Civilite>();
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase
+          .from("entreprise_contacts")
+          .select("id, civilite")
+          .neq("civilite", "")
+          .order("id")
+          .range(from, from + 999);
+        if (error) return { disponible: false, parContact };
+        for (const r of data as { id: string; civilite: Civilite }[])
+          parContact.set(r.id, r.civilite);
+        if (data.length < 1000) break;
+      }
+      return { disponible: true, parContact };
+    },
+  });
+}
+
+/** Enregistre la civilité d'un contact (ouvert à toute l'équipe). */
+export function useDefinirCivilite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { contactId: string; civilite: Civilite }) => {
+      const { error } = await supabase.rpc("definir_civilite", {
+        p_contact: v.contactId,
+        p_civilite: v.civilite,
+      });
+      if (error) throw error;
+    },
+    onMutate: (v) => {
+      queryClient.setQueryData<{ disponible: boolean; parContact: Map<string, Civilite> }>(
+        CIVILITES_KEY,
+        (old) =>
+          old && {
+            ...old,
+            parContact: new Map(old.parContact).set(v.contactId, v.civilite),
+          },
+      );
     },
   });
 }
